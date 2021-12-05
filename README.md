@@ -10,9 +10,9 @@
 
 　　S-BASIC 1Z-007B　　　　　　起動時間 約7秒
 
-　　HUBASIC VERSION 2.0A　　起動時間 約8秒
+　　HUBASIC VERSION 2.0A　　　起動時間 約8秒
 
-　　tiny XEVIOUS mz-700　　　起動時間 約6秒
+　　tiny XEVIOUS mz-700　　　　起動時間 約6秒
 
 ## 回路図
 　KiCadフォルダ内のSCH参照
