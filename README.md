@@ -167,23 +167,23 @@ NEW NAME:TEST2[改行]
 
 ○ LOAD[改行]
 
-  TEST[改行]
+　　TEST[改行]
 
 ○ LOAD[改行]
 
-  TEST.MZT[改行]
+　　TEST.MZT[改行]
 
 ** 参考 **
 
- S-OS SWORDでの運用に当たっては起動直後に「DV S:」としてデバイスを各SYSTEMデバイスとしてください。
+　S-OS SWORDでの運用に当たっては起動直後に「DV S:」としてデバイスを各SYSTEMデバイスとしてください。
 
- FUZZY BASICだけかもしれませんが共通フォーマットデバイスのままだとLOADコマンドでIBFファイル名の省略ができませんでした。
+　FUZZY BASICだけかもしれませんが共通フォーマットデバイスのままだとLOADコマンドでIBFファイル名の省略ができませんでした。
 
- また、S-OSでアプリケーションをLOADしようとしたとき、最初の一回だけはなぜかインフォメーションブロックの読み込みで止まってしまい、継続してデータブロックを読み込ませるためには改行等のキーを一回押す必要がありました。
+　また、S-OSでアプリケーションをLOADしようとしたとき、最初の一回だけはなぜかインフォメーションブロックの読み込みで止まってしまい、継続してデータブロックを読み込ませるためには改行等のキーを一回押す必要がありました。
 
- 最初の一回だけであること、EMULATORでも同じ現象が起こることから私の所有するS-OS SWORDバイナリに内包する何らかの問題でありSD-CARDアダプタの問題ではないと判断し、そのまま放置しています。
+　最初の一回だけであること、EMULATORでも同じ現象が起こることから私の所有するS-OS SWORDバイナリに内包する何らかの問題でありSD-CARDアダプタの問題ではないと判断し、そのまま放置しています。
 
- もし同様の現象が起こるようなら改行等を一回押して継続してください。
+　もし同様の現象が起こるようなら改行等を一回押して継続してください。
 
 ### アプリケーションからのSAVE
 　アプリケーションの指定する入力方法、ルールでファイル名を入力して保存してください(16文字以内)。
@@ -207,60 +207,60 @@ NEW NAME:TEST2[改行]
 
 ## SD-CARDに読み書きできるかを試した結果
 
-  読み書き出来たもの
+　読み書き出来たもの
 
-   BASE-80 Ver35
+　　BASE-80 Ver35
 
-   BASIC SP-5030
+　　BASIC SP-5030
 
-   CAP-Xインタプリタ
+　　CAP-Xインタプリタ
 
-   EDASM V1.2B
+　　EDASM V1.2B
 
-   FORM VER1.0
+　　FORM VER1.0
 
-   FORTRAN-MZ V.1
+　　FORTRAN-MZ V.1
 
-   GAME-MZ80K V.1
+　　GAME-MZ80K V.1
 
-   HU-BASIC V1.3
+　　HU-BASIC V1.3
 
-   M-FORTH/MZ V1.1
+　　M-FORTH/MZ V1.1
 
-   micro PASCAL-MZ VER 2.2
+　　micro PASCAL-MZ VER 2.2
 
-   PALL
+　　PALL
 
-   S-OS SWORD(S-OS用アプリ含む)
+　　S-OS SWORD(S-OS用アプリ含む)
 
-   SP-2101 Z80 ASSEMBLER
+　　SP-2101 Z80 ASSEMBLER
 
-   SP-2201 TEXT EDITOR
+　　SP-2201 TEXT EDITOR
 
-   SP-2301 RELOCATE LOADER
+　　SP-2301 RELOCATE LOADER
 
-   SP-2401 SYMB DEBUGGER
+　　SP-2401 SYMB DEBUGGER
 
-   TL1
+　　TL1
 
-   TTL VERSION 1.1
+　　TTL VERSION 1.1
 
-   WICS INTERPRETER VER 1.1
+　　WICS INTERPRETER VER 1.1
 
 
-  読み書き出来なかったもの
+　読み書き出来なかったもの
 
-   EDAS FOR MZ-1200 VER 1.2
+　　EDAS FOR MZ-1200 VER 1.2
 
-   EXIT MONITOR
+　　EXIT MONITOR
 
 ## 謝辞
 　基板の作成に当たり以下のデータを使わせていただきました。ありがとうございました。
 
 　Arduino Pro Mini
 
-　 https://github.com/g200kg/kicad-lib-arduino
+　　https://github.com/g200kg/kicad-lib-arduino
 
 　AE-microSD-LLCNV
 
-　 https://github.com/kuninet/PC-8001-SD-8kRAM
+　　https://github.com/kuninet/PC-8001-SD-8kRAM
