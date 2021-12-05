@@ -205,6 +205,55 @@ NEW NAME:TEST2[改行]
 
 　SD-CARDの抜き差しは電源を切った状態で行うほうがより確実です。
 
+## SD-CARDに読み書きできるかを試した結果
+
+  読み書き出来たもの
+
+   BASE-80 Ver35
+
+   BASIC SP-5030
+
+   CAP-Xインタプリタ
+
+   EDASM V1.2B
+
+   FORM VER1.0
+
+   FORTRAN-MZ V.1
+
+   GAME-MZ80K V.1
+
+   HU-BASIC V1.3
+
+   M-FORTH/MZ V1.1
+
+   micro PASCAL-MZ VER 2.2
+
+   PALL
+
+   S-OS SWORD(S-OS用アプリ含む)
+
+   SP-2101 Z80 ASSEMBLER
+
+   SP-2201 TEXT EDITOR
+
+   SP-2301 RELOCATE LOADER
+
+   SP-2401 SYMB DEBUGGER
+
+   TL1
+
+   TTL VERSION 1.1
+
+   WICS INTERPRETER VER 1.1
+
+
+  読み書き出来なかったもの
+
+   EDAS FOR MZ-1200 VER 1.2
+
+   EXIT MONITOR
+
 ## 謝辞
 　基板の作成に当たり以下のデータを使わせていただきました。ありがとうございました。
 
