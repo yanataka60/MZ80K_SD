@@ -1,0 +1,14 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP GAL22V10
+D Programmable Logic Array, DIP-24
+K GAL PLD 22V10
+$ENDCMP
+#
+$CMP Micro_SD_Card_Kit
+D Micro SD Card Socket
+K connector SD microsd
+F http://katalog.we-online.de/em/datasheet/693072010801.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,52 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  F000                				ORG	0F000H
+                      	
+  F000  FF            				DB	0FFH             ;ROMなし識別コード
+  F001  C313F0        				JP		START
+                      	;******************** MONITOR CMTルーチンへリターン *************************************
+  F004  C32AF0        				JP		MSHED
+  F007  C330F0        				JP		MSDAT
+  F00A  C336F0        				JP		MLHED
+  F00D  C33CF0        				JP		MLDAT
+  F010  C342F0        				JP		MVRFY
+  F013                	START:							;識別コードをROMあり(00H)に変更し、FDコマンドを有効にした場合、この処理が起動
+  F013  2148F0        				LD	HL,DATA			;DATAからLENGTHバイトをTRNSにコピーしてDSTRTから実行
+  F016  ED5B26F0      				LD	DE,(TRNS)
+  F01A  ED4B24F0      				LD	BC,(LENGTH)
+  F01E  EDB0          				LDIR
+  F020  2A28F0        				LD	HL,(DSTRT)
+  F023  E9            				JP	(HL)
+  F024                	LENGTH:
+  F024  C003          				DW 03C0H
+  F026                	TRNS:
+  F026  405A          				DW 5A40H
+  F028                	DSTRT:
+  F028  005B          				DW 5B00H
+  F02A                	MSHED:							;JUMPしてきた先にリターン
+  F02A  D5            				PUSH	DE			;PUSH命令をつぶしてJUMPしてきているので代わりにPUSHはしておく
+  F02B  C5            				PUSH	BC
+  F02C  E5            				PUSH	HL
+  F02D  C33A04        				JP	043AH
+  F030                	MSDAT:
+  F030  D5            				PUSH	DE
+  F031  C5            				PUSH	BC
+  F032  E5            				PUSH	HL
+  F033  C37904        				JP	0479H
+  F036                	MLHED:
+  F036  D5            				PUSH	DE
+  F037  C5            				PUSH	BC
+  F038  E5            				PUSH	HL
+  F039  C3DC04        				JP	04DCH
+  F03C                	MLDAT:
+  F03C  D5            				PUSH	DE
+  F03D  C5            				PUSH	BC
+  F03E  E5            				PUSH	HL
+  F03F  C3FC04        				JP 04FCH
+  F042                	MVRFY:
+  F042  D5            				PUSH	DE
+  F043  C5            				PUSH	BC
+  F044  E5            				PUSH	HL
+  F045  C38C05        				JP	058CH
+  F048                	DATA:							;ここからに起動したいプログラムを展開
+  F048                				END
+

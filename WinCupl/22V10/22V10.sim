@@ -1,0 +1,69 @@
+%SIGNAL
+PIN  10 =  AD2 
+PIN   9 =  AD3 
+PIN   8 =  AD4 
+PIN   7 =  AD5 
+PIN   6 =  AD6 
+PIN   5 =  AD7 
+PIN   4 =  AD12 
+PIN   3 =  AD13 
+PIN   2 =  AD14 
+PIN   1 =  AD15 
+PIN  18 =  IORD 
+PIN  14 =  IOREQ 
+PIN  17 =  IOWD 
+PIN  19 =  MEMRD 
+PIN  13 =  MEMRQ 
+PIN  22 =  PIOCE 
+PIN  15 =  RD 
+PIN  23 =  ROMCE 
+PIN  16 =  WD 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+IORD =>
+    IOREQ
+  # RD
+
+IOWD =>
+    IOREQ
+  # WD
+
+MEMRD =>
+    MEMRQ
+  # RD
+
+PIOCE =>
+    !AD2 & AD3 & AD4 & !AD5 & AD6 & AD7
+
+ROMCE =>
+    AD12 & AD13 & AD14 & AD15
+
+IORD.oe  =>
+    1 
+
+IOREQ.oe  =>
+    0 
+
+IOWD.oe  =>
+    1 
+
+MEMRD.oe  =>
+    1 
+
+PIOCE.oe  =>
+    1 
+
+RD.oe  =>
+    0 
+
+ROMCE.oe  =>
+    1 
+
+WD.oe  =>
+    0 
+
+%END
