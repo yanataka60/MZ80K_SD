@@ -17,6 +17,7 @@ EADRS		EQU		1102H
 FSIZE		EQU		1102H
 SADRS		EQU		1104H
 EXEAD		EQU		1106H
+DSPX		EQU		1171H
 LBUF		EQU		11A3H
 MBUF		EQU		11AEH
 MONITOR_80K	EQU		0082H
@@ -429,7 +430,7 @@ STRN:	LD		A,85H      ;FILE RENAMEコマンド85H
 		CALL	MSGPR
 		
 		LD		A,09H
-		LD		(1171H),A  ;カーソル位置を'NEW NAME:'の次へ
+		LD		(DSPX),A  ;カーソル位置を'NEW NAME:'の次へ
 		LD		DE,LBUF    ;NEW FILE NAMEを取得
 		CALL	GETL
 		LD		DE,LBUF+8  ;NEW FILE NAMEを送信
@@ -525,7 +526,7 @@ STCP:	LD		A,87H      ;FILE COPYコマンド87H
 		CALL	MSGPR
 		
 		LD		A,09H
-		LD		(1171H),A    ;カーソル位置を'NEW NAME:'の次へ
+		LD		(DSPX),A    ;カーソル位置を'NEW NAME:'の次へ
 		LD		DE,LBUF      ;NEW FILE NAMEを取得
 		CALL	GETL
 		LD		DE,LBUF+8    ;NEW FILE NAMEを送信
@@ -696,7 +697,11 @@ MSG_DELN:
 		DB		0DH
 		
 MSG_REN:
-		DB		'NEW NAME:                              '
+		DB		'NEW NAME:                            '
+		DB		0DH
+		
+MSG_DNAME:
+		DB		'DOS FILE:                            '
 		DB		0DH
 		
 MSG_RENY:
@@ -801,10 +806,23 @@ MLH0:	LD		(HL),A
 		INC		DE
 		DEC		B
 		JR		NZ,MLH0
-		LD		DE,MBUF    ;ファイルネームを指示するための苦肉の策。LOADコマンドとしてはファイルネームなしとして改行したのちに行バッファの位置をずらしてDOSファイルネームを入力する。。
+
+		LD		A,03H          ;一行分をクリアするため3文字削除、37文字出力
+		LD		(DSPX),A
+		LD		A,0C7H
+		CALL	DPCT
+		CALL	DPCT
+		CALL	DPCT
+		LD		DE,MSG_DNAME   ;'DOS FILE:'
+		CALL	MSGPR
+		LD		A,09H          ;カーソルを9文字目に戻す
+		LD		(DSPX),A
+
+		LD		DE,MBUF    ;ファイルネームを指示するための苦肉の策。LOADコマンドとしてはファイルネームなしとして改行したのちに行バッファの位置をずらしてDOSファイルネームを入力する。
 		CALL	GETL
 		
-		LD		DE,MBUF
+		LD		DE,MBUF+9
+;		LD		DE,MBUF
 MLH1:
 		LD		A,(DE)
 		CP		20H                 ;行頭のスペースをファイルネームまで読み飛ばし

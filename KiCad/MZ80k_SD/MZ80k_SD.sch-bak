@@ -843,7 +843,7 @@ F 1 "MZ-80K BUS" H 1950 2766 50  0000 C CNN
 F 2 "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Horizontal" H 1900 4100 50  0001 C CNN
 F 3 "~" H 1900 4100 50  0001 C CNN
 	1    1900 4100
-	-1   0    0    1   
+	-1   0    0    -1  
 $EndComp
 Wire Wire Line
 	9200 2100 10300 2100
@@ -891,4 +891,26 @@ $EndComp
 Wire Wire Line
 	800  4300 800  4500
 Connection ~ 800  4500
+$Comp
+L Device:CP1 C?
+U 1 1 61AFFCD6
+P 10450 3050
+F 0 "C?" H 10565 3096 50  0000 L CNN
+F 1 "100uF" H 10565 3005 50  0000 L CNN
+F 2 "" H 10450 3050 50  0001 C CNN
+F 3 "~" H 10450 3050 50  0001 C CNN
+	1    10450 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 61B04D1B
+P 10450 3200
+F 0 "#PWR?" H 10450 2950 50  0001 C CNN
+F 1 "GND" H 10455 3027 50  0000 C CNN
+F 2 "" H 10450 3200 50  0001 C CNN
+F 3 "" H 10450 3200 50  0001 C CNN
+	1    10450 3200
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
