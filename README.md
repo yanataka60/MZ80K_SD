@@ -259,9 +259,9 @@ NEW NAME:TEST2[改行]
 　　EXIT MONITOR
 
 ## MZ700用プログラムで起動確認したもの
-　　S-BASIC 1Z-007B　　　　　　起動時間 約7秒
+　　S-BASIC 1Z-007B　　　　　　起動時間 約7秒(起動後のLOAD、SAVEはCMT)
 
-　　HUBASIC VERSION 2.0A　　　起動時間 約8秒
+　　HUBASIC VERSION 2.0A　　　起動時間 約8秒(起動後のLOAD、SAVEはCMT)
 
 　　tiny XEVIOUS mz-700　　　　起動時間 約6秒
 
