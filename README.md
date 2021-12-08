@@ -20,7 +20,7 @@
 
 　Arduino Pro Mini 5V又は同等品 x 1
 
-　Micro SD Card Kit又は同等品   x 1 (プリント基板は、秋月電子通商　AE-microSD-LLCNVを使ってます)
+　Micro SD Card Kit又は同等品   x 1 (プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)
 
 　セラミックコンデンサ 0.1μF          x 3
 
