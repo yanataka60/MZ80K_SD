@@ -309,8 +309,5 @@ NEW NAME:TEST2[CR]
 
 　Arduino Pro Mini
 
-　　https://github.com/g200kg/kicad-lib-arduino
-
-　AE-microSD-LLCNV
-
-　　https://github.com/kuninet/PC-8001-SD-8kRAM
+https://github.com/g200kg/kicad-lib-arduinoAE-microSD-LLCNV
+https://github.com/kuninet/PC-8001-SD-8kRAM
