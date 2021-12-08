@@ -182,8 +182,8 @@ char p_name[20];
   unsigned int g_adrs = g_adrs1+g_adrs2*256;
 //ファイルサイズ算出
   unsigned int f_length = e_adrs - s_adrs + 1;
-  unsigned int f_length1 = f_length / 256;
-  unsigned int f_length2 = f_length % 256;
+  unsigned int f_length1 = f_length % 256;
+  unsigned int f_length2 = f_length / 256;
 //ファイルが存在すればdelete
   if (SD.exists(f_name) == true){
     SD.remove(f_name);
@@ -199,14 +199,14 @@ char p_name[20];
     file.write(p_name);
     file.write(char(0x00));
 //ファイルサイズ
-    file.write(f_length2);
     file.write(f_length1);
+    file.write(f_length2);
 //スタートアドレス
-    file.write(s_adrs2);
     file.write(s_adrs1);
+    file.write(s_adrs2);
 //実行アドレス
-    file.write(g_adrs2);
     file.write(g_adrs1);
+    file.write(g_adrs2);
 //7Fまで00埋め
     for (unsigned int lp1 = 0;lp1 <= 103;lp1++){
       file.write(char(0x00));
