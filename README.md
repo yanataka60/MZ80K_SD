@@ -238,7 +238,7 @@ NEW NAME:TEST2[CR]
 
 　DOSファイル名は「.MZT」を除いて32文字まで、ただし半角カタカナ、及び一部の記号はArduinoが認識しないので使えません。パソコンでファイル名を付けるときはアルファベット、数字および空白でファイル名をつけてください。
 
-例)BASIC SP-5030
+例)BASIC SP-5030では
 
 × LOAD "TEST"[CR]
 
@@ -269,7 +269,7 @@ NEW NAME:TEST2[CR]
 
 　DOSファイル名としての「.MZT」は自動的に付加されます。
 
-例)BASIC SP-5030
+例)BASIC SP-5030では
 
 ○ SAVE "TEST"[CR]
 
