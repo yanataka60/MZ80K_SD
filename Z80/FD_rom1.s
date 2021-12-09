@@ -8,8 +8,10 @@ GETKEY		EQU		001BH
 PRTWRD		EQU		03BAH
 PRTBYT		EQU		03C3H
 HLHEX		EQU		0410H
+TWOHEX		EQU		041FH
 WRMSG		EQU		046CH
 DISPLAY		EQU		0970H
+ADCN		EQU		0BB9H
 DPCT		EQU		0DDCH
 IBUFE		EQU		10F0H
 FNAME		EQU		10F1H
@@ -93,6 +95,10 @@ STETC:
 		JP		Z,STPR
 		CP		'C'         ;FDC:COPY
 		JP		Z,STCP
+		CP		'M'         ;FDM:MEMORY DUMP
+		JP		Z,STMD
+		CP		'W'         ;FDW:MEMORY WRITE
+		JP		Z,STMW
 		JP		CMDERR
 
 ;**** 8255初期化 ****
@@ -165,12 +171,8 @@ STSV:	INC		DE
 		PUSH	DE
 		CALL	HLHEX       ;1文字空けて4桁の16進数であればSADRSにセットして続行
 		JR		C,STSV1
-		LD		BC,SADRS
-		LD		A,L
-		LD		(BC),A
-		INC		BC
-		LD		A,H
-		LD		(BC),A
+
+		LD		(SADRS),HL      ;SARDS保存
 		POP		DE
 		INC		DE
 		INC		DE
@@ -180,12 +182,14 @@ STSV:	INC		DE
 		PUSH	DE          ;5文字進めて4桁の16進数であればEADRSにセットして続行
 		CALL	HLHEX
 		JR		C,STSV1
-		LD		BC,EADRS
-		LD		A,L
-		LD		(BC),A
-		INC		BC
-		LD		A,H
-		LD		(BC),A
+		PUSH	HL
+		LD		BC,(SADRS)
+		SBC		HL,BC       ;EADRSがSADRSより大きくない場合はエラー
+		POP		HL
+		JR		Z,STSV1
+		JP		M,STSV1
+
+		LD		(EADRS),HL      ;EADRS保存
 		POP		DE
 		INC		DE
 		INC		DE
@@ -195,12 +199,8 @@ STSV:	INC		DE
 		PUSH	DE
 		CALL	HLHEX
 		JR		C,STSV1
-		LD		BC,EXEAD
-		LD		A,L
-		LD		(BC),A
-		INC		BC
-		LD		A,H
-		LD		(BC),A
+		
+		LD		(EXEAD),HL      ;EXEAD保存
 		POP		DE
 		INC		DE
 		INC		DE
@@ -212,7 +212,7 @@ STSV:	INC		DE
 		JP		M,STSV2
 		EX		DE,HL
 		JR		SDSAVE      ;SAVE処理へ
-STSV1:                      ;16進数4桁の取得に失敗
+STSV1:                      ;16進数4桁の取得に失敗又はEADRSがSARDSより大きくない
 		LD		DE,MSG_AD
 		JR		ERRMSG
 STSV2:                      ;ファイルネームの取得に失敗
@@ -475,8 +475,6 @@ STPR1:	CALL	RCVBYTE
 		DEC		B
 		INC		HL
 		JR		NZ,STPR1
-		LD		A,0DH
-		LD		(HL),A
 
 		LD		HL,(SADRS) ;アドレス表示
 		CALL	PRTWRD
@@ -494,8 +492,15 @@ STPR2:	CALL	PRNTS
 		JR		NZ,STPR2
 		
 		CALL	PRNTS
-		LD		DE,LBUF    ;一行(8Byte)のデータをASCII文字として表示
-		CALL	PLIST
+		LD		DE,LBUF
+		LD		B,08H
+STPR9:	LD		A,(DE)
+		CALL	ADCN
+		CALL	DISPLAY
+		INC		DE
+		DEC		B
+		JR		NZ,STPR9
+
 		CALL	LETLN
 		POP		BC
 		DEC		C
@@ -538,6 +543,110 @@ STCP:	LD		A,87H      ;FILE COPYコマンド87H
 		JP		NZ,SVERR
 		LD		DE,MSG_CPY
 		JP		ERRMSG
+
+;**** MEMORY DUMP ****
+STMD:	INC		DE
+		INC		DE
+		CALL	HLHEX       ;1文字空けて4桁の16進数であればSADRSにセットして続行
+		JP		C,STSV1
+		LD		(SADRS),HL      ;SARDS保存
+
+STMD6:	LD		DE,MSG_AD1 ;DUMP TITLE表示
+		CALL	MSGPR
+		CALL	LETLN
+		LD		C,10H      ;16行(128Byte)を表示
+STMD7:	LD		HL,(SADRS) ;アドレス表示
+		CALL	PRTWRD
+		CALL	PRNTS
+
+		
+		LD		B,08H
+STMD0:	LD		A,(HL)
+		CALL	PRTBYT
+		CALL	PRNTS
+		CALL	GETKEY
+		CP		64H
+		JR		Z,STMD4
+		INC		HL
+		DEC		B
+		JR		NZ,STMD0
+
+		LD		HL,(SADRS)
+		LD		B,08H
+STMD2:	LD		A,(HL)
+		CALL	ADCN
+		CALL	DISPLAY
+		CALL	GETKEY
+		CP		64H
+		JR		Z,STMD4
+		INC		HL
+		DEC		B
+		JR		NZ,STMD2
+
+		LD		(SADRS),HL
+		CALL	LETLN
+
+		DEC		C
+		JR		NZ,STMD7
+		
+		LD		DE,MSG_AD2        ;入力待ちメッセージ表示
+		CALL	MSGPR
+		CALL	LETLN
+		CALL	LETLN
+STMD3:	CALL	GETKEY            ;1文字入力待ち
+		CP		00H
+		JR		Z,STMD3
+		CP		64H               ;SHIFT+BREAKで打ち切り
+		JR		Z,STMD4
+		CP		42H
+		JR		NZ,STMD5
+		LD		HL,(SADRS)
+		LD		DE,0100H
+		SBC		HL,DE
+		LD		(SADRS),HL
+STMD5:	JP		STMD6
+STMD4:	JP		MON
+
+;**** MEMORY WRITE ****
+STMW:	INC		DE
+		INC		DE
+		CALL	HLHEX       ;1文字空けて4桁の16進数であればHLにセットして続行
+		JP		C,STSV1
+
+		INC		DE
+		INC		DE
+		INC		DE
+		INC		DE
+		LD		A,(DE)
+		CP		0DH
+		JR		Z,STMW9     ;アドレスのみなら終了
+		CALL	STSP        ;空白は飛ばす
+STMW1:
+
+		CALL	TWOHEX
+		JR		C,STMW8
+		LD		(HL),A      ;2桁の16進数があれば(HL)に書き込み
+		INC		HL
+		CALL	STSP        ;空白は飛ばす
+		LD		A,(DE)
+		CP		0DH         ;一行終了
+		JR		Z,STMW8
+		JR		STMW1
+		
+STMW8:	
+		LD		DE,MSG_FDW  ;行頭に'*FDW '
+		CALL	MSGPR
+		CALL	PRTWRD      ;アドレス表示
+		CALL	PRNTS
+		LD		DE,LBUF     ;一行入力
+		CALL	GETL
+		LD		DE,LBUF
+		LD		A,(DE)
+		CP		1BH
+		JR		Z,STMW9     ;SHIFT+BREAKで破棄、終了
+		LD		DE,LBUF+3
+		JR		STMW
+STMW9:	JP		MON
 
 ;**** 1BYTE受信 ****
 ;受信DATAをAレジスタにセットしてリターン
@@ -593,6 +702,14 @@ F2CHK:	IN		A,(0DAH)
 		AND		80H        ;PORTC BIT7 = 0?
 		JR		NZ,F2CHK
 		RET
+
+;****** 空白読み飛ばし *********
+STSP:	LD		A,(DE)
+		CP		20H
+		JR		NZ,STSP1
+		INC		DE
+		JR		STSP
+STSP1:	RET
 
 ;****** FILE NAME 取得 (IN:DE コマンド文字の次の文字 OUT:HL ファイルネームの先頭)*********
 STFN:	PUSH	AF
@@ -720,6 +837,10 @@ MSG_CPY:
 		DB		'COPY OK'
 		DB		0DH
 		
+MSG_FDW:
+		DB		'*FDW '
+		DB		0DH
+
 MSG99:
 		DB		' ERROR'
 		DB		0DH
