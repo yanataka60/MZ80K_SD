@@ -338,11 +338,11 @@ NEW NAME:TEST2[CR]
 
 　　FORTRAN-MZ V.1
 
-　　GAME-MZ80K V.1
+　　GAME-MZ80K V.1(MZ-700非対応)
 
 　　HU-BASIC V1.3
 
-　　M-FORTH/MZ V1.1
+　　M-FORTH/MZ V1.1(MZ-700非対応)
 
 　　micro PASCAL-MZ VER 2.2
 
@@ -360,7 +360,7 @@ NEW NAME:TEST2[CR]
 
 　　SP-2401 SYMB DEBUGGER
 
-　　TL1
+　　TL/1(MZ-700非対応)
 
 　　TTL VERSION 1.1
 
@@ -374,15 +374,15 @@ NEW NAME:TEST2[CR]
 　　EXIT MONITOR
 
 ## MZ700用プログラムで起動確認したもの
-　　S-BASIC 1Z-007B　　　　　　起動時間 約7秒(起動後のLOAD、SAVEはCMT)
+　　S-BASIC 1Z-007B(起動後のLOAD、SAVEはCMT)
 
-　　HUBASIC VERSION 2.0A　　　起動時間 約8秒(起動後のLOAD、SAVEはCMT)
+　　HUBASIC VERSION 2.0A(起動後のLOAD、SAVEはCMT)
 
-　　tiny XEVIOUS mz-700　　　　起動時間 約6秒
+　　tiny XEVIOUS mz-700
 
-　　タイムシークレット　(すべてのプログラムを別ファイルとして保存が必要)
+　　タイムシークレット(すべてのプログラムを別ファイルとして保存が必要)
 
-　　タイムトンネル　(すべてのプログラムを別ファイルとして保存が必要)
+　　タイムトンネル(すべてのプログラムを別ファイルとして保存が必要)
 
 
 ## 謝辞
