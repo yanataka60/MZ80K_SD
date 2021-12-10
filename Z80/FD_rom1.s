@@ -338,12 +338,18 @@ STLT:	INC		DE
 		JR		NZ,STLT1
 		LD		A,30H
 		JR		DIRLIST    ;FDLだけなら'30H'を送信(全ファイルを表示)
-STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H'を送信(20件を1ページとしてnページを表示)
+STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
 		LD		A,(DE)
 		CP		30H
 		JP		M,CMDERR
-		CP		39H
+		CP		3AH
+		JP		P,STLT2
+		JR		DIRLIST
+STLT2:	CP		41H        ;念のためA～Zにも対応
+		JP		M,CMDERR
+		CP		5BH
 		JP		P,CMDERR
+		SUB		07H
 DIRLIST:
 		PUSH	AF
 		LD		A,83H      ;DIRLISTコマンド83Hを送信
