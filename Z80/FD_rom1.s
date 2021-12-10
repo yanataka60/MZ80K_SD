@@ -447,8 +447,8 @@ STRN:	LD		A,85H      ;FILE RENAMEコマンド85H
 STPR:	LD		A,86H      ;FILE DUMPEコマンド86H
 		CALL	STCMD
 
-		LD		A,0C6H     ;画面クリア
-		CALL	DPCT
+;		LD		A,0C6H     ;画面クリア
+;		CALL	DPCT
 STPR6:	LD		HL,SADRS   ;SADRS取得
 		CALL	RCVBYTE
 		LD		(HL),A
@@ -617,22 +617,28 @@ STMW:	INC		DE
 		INC		DE
 		INC		DE
 		INC		DE
-		LD		A,(DE)
+STSP1:	LD		A,(DE)
 		CP		0DH
 		JR		Z,STMW9     ;アドレスのみなら終了
-		CALL	STSP        ;空白は飛ばす
-STMW1:
+		CP		20H
+		JR		NZ,STMW1
+		INC		DE          ;空白は飛ばす
+		JR		STSP1
 
+STMW1:
 		CALL	TWOHEX
 		JR		C,STMW8
 		LD		(HL),A      ;2桁の16進数があれば(HL)に書き込み
 		INC		HL
-		CALL	STSP        ;空白は飛ばす
-		LD		A,(DE)
+
+STSP2:	LD		A,(DE)
 		CP		0DH         ;一行終了
 		JR		Z,STMW8
-		JR		STMW1
-		
+		CP		20H
+		JR		NZ,STMW1
+		INC		DE          ;空白は飛ばす
+		JR		STSP2
+
 STMW8:	
 		LD		DE,MSG_FDW  ;行頭に'*FDW '
 		CALL	MSGPR
@@ -702,14 +708,6 @@ F2CHK:	IN		A,(0DAH)
 		AND		80H        ;PORTC BIT7 = 0?
 		JR		NZ,F2CHK
 		RET
-
-;****** 空白読み飛ばし *********
-STSP:	LD		A,(DE)
-		CP		20H
-		JR		NZ,STSP1
-		INC		DE
-		JR		STSP
-STSP1:	RET
 
 ;****** FILE NAME 取得 (IN:DE コマンド文字の次の文字 OUT:HL ファイルネームの先頭)*********
 STFN:	PUSH	AF
