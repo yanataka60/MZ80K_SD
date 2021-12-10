@@ -71,6 +71,8 @@ START:	CALL	INIT
 STT2:	LD		A,(DE)
 		CP		20H         ;FDの後に1文字空白があれば以降をファイルネームとしてロード(ファイルネームは32文字まで)
 		JR		Z,SDLOAD
+		CP		'/'         ;FDの後が'/'なら以降をファイルネームとしてロード、実行はしない(ファイルネームは32文字まで)
+		JR		Z,SDLOAD
 		CP		0DH         ;FDだけで改行の場合にはDEFNAMEの文字列をファイルネームとしてロード
 		JR		NZ,STETC    ;該当なしなら他コマンドをチェック
 STT3:	PUSH	DE          ;設定ファイル名(0000.mzt)を転送
@@ -117,6 +119,9 @@ SDLOAD:	LD		A,81H  ;LOADコマンド81H
 		CALL	STCMD
 		CALL	HDRCV      ;ヘッダ情報受信
 		CALL	DBRCV      ;データ受信
+		LD		A,(LBUF+3)
+		CP		'/'        ;'*FD/'であれば実行アドレスに飛ばずにMONITORコマンド待ちに戻る
+		JP		Z,MON
 		LD		HL,(EXEAD)
 		JP		(HL)
 
