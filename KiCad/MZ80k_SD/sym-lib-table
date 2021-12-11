@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name Memory_RAM2)(type Legacy)(uri ${KIPRJMOD}/Memory_RAM2.lib)(options "")(descr ""))
+  (lib (name Arduino)(type Legacy)(uri ${KIPRJMOD}/Arduino.lib)(options "")(descr ""))
+)
