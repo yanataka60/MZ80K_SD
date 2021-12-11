@@ -262,6 +262,8 @@ MON:	LD		HL,014EH
 		LD		A,(HL)
 		CP		'P'             ;014EH‚ª'P'‚È‚çMZ-80K
 		JP		Z,MONITOR_80K
+		CP		'N'             ;014EH‚ª'N'‚È‚çFN-700
+		JP		Z,MONITOR_80K
 		LD		HL,06EBH
 		LD		A,(HL)
 		CP		'M'             ;06EBH‚ª'M'‚È‚çMZ-700

@@ -338,11 +338,11 @@ NEW NAME:TEST2[CR]
 
 　　FORTRAN-MZ V.1
 
-　　GAME-MZ80K V.1(MZ-700非対応)
+　　GAME-MZ80K V.1(注1)
 
 　　HU-BASIC V1.3
 
-　　M-FORTH/MZ V1.1(MZ-700非対応)
+　　M-FORTH/MZ V1.1(注1)
 
 　　micro PASCAL-MZ VER 2.2
 
@@ -360,12 +360,13 @@ NEW NAME:TEST2[CR]
 
 　　SP-2401 SYMB DEBUGGER
 
-　　TL/1(MZ-700非対応)
+　　TL/1(注1)
 
 　　TTL VERSION 1.1
 
 　　WICS INTERPRETER VER 1.1
 
+注1)このアプリケーションはMZ-700非対応です。MZ-700で動かすには、0h!MZ別冊 ADVANCED MZ-700に掲載されているSP-1002のMZ-700対応版 NZ-700が必要です。NZ-700を用意したうえでMZ-80K_SDのパッチをあててください。
 
 　読み書き出来なかったもの
 
