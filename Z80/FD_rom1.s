@@ -191,7 +191,7 @@ STSV:	INC		DE
 		SBC		HL,BC       ;EADRSがSADRSより大きくない場合はエラー
 		POP		HL
 		JR		Z,STSV1
-		JP		M,STSV1
+		JR		C,STSV1
 
 		LD		(EADRS),HL      ;EADRS保存
 		POP		DE
@@ -213,7 +213,7 @@ STSV:	INC		DE
 		INC		DE			;5文字進めてファイルネームがあれば続行
 		LD		A,(DE)
 		CP		31H
-		JP		M,STSV2
+		JR		C,STSV2
 		EX		DE,HL
 		JR		SDSAVE      ;SAVE処理へ
 STSV1:                      ;16進数4桁の取得に失敗又はEADRSがSARDSより大きくない
@@ -342,14 +342,14 @@ STLT:	INC		DE
 STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
 		LD		A,(DE)
 		CP		30H
-		JP		M,CMDERR
+		JP		C,CMDERR
 		CP		3AH
-		JP		P,STLT2
+		JR		NC,STLT2
 		JR		DIRLIST
 STLT2:	CP		41H        ;念のためA～Zにも対応
-		JP		M,CMDERR
+		JP		C,CMDERR
 		CP		5BH
-		JP		P,CMDERR
+		JP		NC,CMDERR
 		SUB		07H
 DIRLIST:
 		PUSH	AF
@@ -504,10 +504,13 @@ STPR2:	CALL	PRNTS
 		JR		NZ,STPR2
 		
 		CALL	PRNTS
-		LD		DE,LBUF
+		LD		DE,LBUF    ;一行(8Byte)のデータをキャラクタ表示
 		LD		B,08H
 STPR9:	LD		A,(DE)
-		CALL	ADCN
+		CP		10H        ;MZ-700での文字化けに対処
+		JR		NC,STPRA
+		LD		A,20H
+STPRA:	CALL	ADCN
 		CALL	DISPCH
 		INC		DE
 		DEC		B
@@ -572,7 +575,7 @@ STMD7:	LD		HL,(SADRS) ;アドレス表示
 		CALL	PRNTS
 
 		
-		LD		B,08H
+		LD		B,08H      ;一行(8Byte)のデータを16進数表示
 STMD0:	LD		A,(HL)
 		CALL	PRTBYT
 		CALL	PRNTS
@@ -584,12 +587,15 @@ STMD0:	LD		A,(HL)
 		JR		NZ,STMD0
 
 		LD		HL,(SADRS)
-		LD		B,08H
+		LD		B,08H      ;一行(8Byte)のデータをキャラクタ表示
 STMD2:	LD		A,(HL)
-		CALL	ADCN
+		CP		10H        ;MZ-700での文字化けに対処
+		JR		NC,STMD8
+		LD		A,20H
+STMD8:	CALL	ADCN
 		CALL	DISPCH
 		CALL	GETKEY
-		CP		64H
+		CP		64H        ;表示途中でもSHIFT+BREAKで打ち切り
 		JR		Z,STMD4
 		INC		HL
 		DEC		B
@@ -728,7 +734,7 @@ STFN1:	INC		DE         ;ファイルネームまでスペース読み飛ばし
 		CP		20H
 		JR		Z,STFN1
 		CP		30H        ;「0」以上の文字でなければエラーとする
-		JP		M,STSV2
+		JP		C,STSV2
 		EX		DE,HL
 		POP		AF
 		RET
