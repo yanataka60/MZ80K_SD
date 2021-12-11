@@ -12,33 +12,37 @@
 　KiCadフォルダ内のSCH参照
 
 ## 部品
-　28C64又は同等品               x 1
+　U1:GAL22V10
 
-　GAL22V10                    x 1
+　U2:28C64又は同等品
 
-　8255                        x 1
+　U3:8255
 
-　Arduino Pro Mini 5V又は同等品 x 1
+　U4:Arduino Pro Mini 5V又は同等品(注1)
 
-　Micro SD Card Kit又は同等品   x 1 (プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)
+　J2:Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)
 
-　セラミックコンデンサ 0.1μF          x 3
+　C1 C2 C3:セラミックコンデンサ 0.1μF
 
-　電解コンデンサ 16v10μF          x 1
+　C4:電解コンデンサ 16v10μF
 
-　3Pスライドスイッチ                x 2
+　S1 S2:3Pスライドスイッチ
 
-　DCジャック                     x 1
+　J4:DCジャック
 
-　ピンヘッダ 2Pin                 x 1
+　J3:コネクタ 2Pin(ピンヘッダで代用するときはGNDと間違えないよう1Pinで5Vだけにしたほうが良いと思います)
 
-　50Pinコネクタ                  x 1
+　J1:50Pinコネクタ
 
-　50Pinケーブル                  x 1
+　50Pinケーブル
 
-　本体内から5Vを取る場合、ケーブル少々 x 1
+　本体内から5Vを取る場合、ケーブル少々
 
-　本体ROMにパッチをあてる場合、27C32等を2532ソケットに差すためのアダプタ x 1
+　本体ROMにパッチをあてる場合、27C32等を2532ソケットに差すためのアダプタ
+
+　注1)Arduino Pro MiniはA4、A5ピンも使っています。
+
+　注2)秋月電子通商　AE-microSD-LLCNVのJ1ジャンパはショートしてください。
 
 ## ROMプログラムについて
 　FD_rom1.bin、FD_rom2.bin、FD_rom.binと3つありますが、SD-CARDを利用するためのプログラムFD_rom1.bin(28C64の下位に配置)、MONITORをCMT利用に戻すためのプログラムFD_rom2.bin(28C64の上位に配置)、2つを合わせたプログラムFD_rom.binとなっています。
