@@ -401,3 +401,9 @@ NEW NAME:TEST2[CR]
 　AE-microSD-LLCNV
 
 　　https://github.com/kuninet/PC-8001-SD-8kRAM
+
+## 追加
+2021.12.12
+
+　MZ-700をMZ-80Kの代わりとして使うだけならNZ-700を最初に起動すればパッチを当てたROMを焼かなくてもいいんだと気づきました。MZ-700のほうがハードルが低いかもしれません。
+　
