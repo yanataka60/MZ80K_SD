@@ -76,10 +76,6 @@
 ## MONITOR ROMの差し替え
 　MONITOR SP-1002、MONITOR 1Z-009Bとも以下のパッチをあててください。
 
-　MZ-700 MONITOR 1Z-009Bについては、RAMにコピーしたMONITORにパッチを当てることでパッチを当てたROMに差し替えなくても済むように「FT.MZT」を作成しました。
-
-　「FT.MZT」をSD-CARDのルートに置き、FD FT[CR]を実行することでRAM MONITORに制御が移ります。
-
 　0437 : D5 → C3
 
 　0438 : C5 → 04
@@ -109,6 +105,11 @@
 　058A : C5 → 10
 
 　058B : E5 → F0
+
+　MZ-700 MONITOR 1Z-009Bについては、RAMにコピーしたMONITORにパッチを当てることでパッチを当てたROMに差し替えなくても済むように「FT.MZT」を作成しました。
+
+　「FT.MZT」をSD-CARDのルートに置き、FD FT[CR]を実行することでRAM MONITORに制御が移ります。
+
 
 　また、紅茶羊羹さんの「MZ⇔PC間でデータを転送する（USB版）」でMZTrans用パッチをMONITOR 1Z-009Bに当てているとFコマンドが使えないので以下のパッチを当てることで'#'コマンドをつぶして'F'コマンドを復活させます。
 
