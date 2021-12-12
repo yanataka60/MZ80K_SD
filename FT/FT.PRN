@@ -1,0 +1,45 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+                      	
+  1200                			ORG		1200H
+                      	
+  1200  F3            			DI
+  1201  210000        			LD		HL,0000H
+  1204  110020        			LD		DE,2000H
+  1207  010010        			LD		BC,1000H
+  120A  EDB0          			LDIR
+  120C  D3E0          			OUT		(0E0H),A
+  120E  210020        			LD		HL,2000H
+  1211  110000        			LD		DE,0000H
+  1214  010010        			LD		BC,1000H
+  1217  EDB0          			LDIR
+  1219  213012        			LD		HL,ADRS
+  121C  114E12        			LD		DE,DATA
+  121F  060F          			LD		B,0FH
+  1221  C5            	LOP1:	PUSH	BC
+  1222  4E            			LD		C,(HL)
+  1223  23            			INC		HL
+  1224  46            			LD		B,(HL)
+  1225  1A            			LD		A,(DE)
+  1226  02            			LD		(BC),A
+  1227  C1            			POP		BC
+  1228  13            			INC		DE
+  1229  23            			INC		HL
+  122A  05            			DEC		B
+  122B  20F4          			JR		NZ,LOP1
+                      			
+  122D  C3AD00        			JP		00ADH
+                      	
+  1230  370438043904  	ADRS:	DW		0437H,0438H,0439H
+  1236  760477047804  			DW		0476H,0477H,0478H
+  123C  D904DA04DB04  			DW		04D9H,04DAH,04DBH
+  1242  F904FA04FB04  			DW		04F9H,04FAH,04FBH
+  1248  89058A058B05  			DW		0589H,058AH,058BH
+                      	
+  124E  C304F0        	DATA:	DB		0C3H,04H,0F0H
+  1251  C307F0        			DB		0C3H,07H,0F0H
+  1254  C30AF0        			DB		0C3H,0AH,0F0H
+  1257  C30DF0        			DB		0C3H,0DH,0F0H
+  125A  C310F0        			DB		0C3H,010H,0F0H
+                      	
+  125D                			END
+
