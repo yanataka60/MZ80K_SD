@@ -1,0 +1,11 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+  0021                			ORG		0021H
+                      	
+  0021  C36551        			JP		5165H
+  0024  C38551        			JP		5185H
+  0027  C3B551        			JP		51B5H
+  002A  C30B52        			JP		520BH
+  002D  C33A52        			JP		523AH
+                      			
+  0030                			END
+
