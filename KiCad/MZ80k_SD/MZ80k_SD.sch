@@ -152,17 +152,6 @@ Wire Wire Line
 	5500 3400 5800 3400
 Wire Wire Line
 	5300 5100 5500 5100
-$Comp
-L Memory_EPROM:27C64 U2
-U 1 1 61A4CF3B
-P 6200 2600
-F 0 "U2" H 6000 3550 50  0000 C CNN
-F 1 "28C64" H 6400 3550 50  0000 C CNN
-F 2 "Package_DIP:DIP-28_W15.24mm_LongPads" H 6200 2600 50  0001 C CNN
-F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/11107M.pdf" H 6200 2600 50  0001 C CNN
-	1    6200 2600
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5300 5500 5600 5500
 Wire Wire Line
@@ -511,10 +500,9 @@ Wire Wire Line
 	6200 3700 6200 3750
 Connection ~ 6200 3750
 Wire Wire Line
-	5700 3750 5700 3200
+	5700 3750 5700 3300
 Wire Wire Line
 	5700 1600 6200 1600
-Connection ~ 6200 1600
 $Comp
 L Device:C C3
 U 1 1 61F2D5C6
@@ -666,7 +654,6 @@ Wire Wire Line
 Connection ~ 5700 3200
 Wire Wire Line
 	5700 3200 5700 1600
-NoConn ~ 5800 3300
 $Comp
 L power:GND #PWR04
 U 1 1 622D4BBF
@@ -913,4 +900,21 @@ F 3 "" H 10450 3200 50  0001 C CNN
 	1    10450 3200
 	1    0    0    -1  
 $EndComp
+Connection ~ 6200 1600
+$Comp
+L Memory_EPROM:27C64 U2
+U 1 1 61A4CF3B
+P 6200 2600
+F 0 "U2" H 6000 3550 50  0000 C CNN
+F 1 "28C64" H 6400 3550 50  0000 C CNN
+F 2 "Package_DIP:DIP-28_W15.24mm_LongPads" H 6200 2600 50  0001 C CNN
+F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/11107M.pdf" H 6200 2600 50  0001 C CNN
+	1    6200 2600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5800 3300 5700 3300
+Connection ~ 5700 3300
+Wire Wire Line
+	5700 3300 5700 3200
 $EndSCHEMATC
