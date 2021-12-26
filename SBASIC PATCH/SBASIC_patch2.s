@@ -109,6 +109,8 @@ MSHED:
 		PUSH	HL
 		LD		A,91H      ;HEADER SAVEコマンド91H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		LD		HL,IBUFE
 		LD		B,80H
@@ -132,6 +134,8 @@ MSDAT:
 		PUSH	HL
 		LD		A,92H      ;DATA SAVEコマンド92H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		LD		HL,FSIZE   ;FSIZE送信
 		LD		A,(HL)
@@ -164,6 +168,8 @@ MLHED:
 		PUSH	HL
 		LD		A,93H      ;HEADER LOADコマンド93H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		
 		LD		DE,FNAME
@@ -223,6 +229,8 @@ MLDAT:
 		PUSH	HL
 		LD		A,94H      ;DATA LOADコマンド94H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		CALL	RCVBYTE    ;状態取得(00H=OK)
 		AND		A          ;00以外ならERROR
@@ -257,8 +265,6 @@ MCMD:	PUSH	AF
 		POP		AF
 		CALL	SNDBYTE    ;コマンドコード送信
 		CALL	RCVBYTE    ;状態取得(00H=OK)
-		AND		A          ;00以外ならERROR
-		JP		NZ,MERR
 		RET
 
 ;****** 代替処理用正常RETURN処理 **********

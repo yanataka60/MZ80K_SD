@@ -109,176 +109,182 @@
   5167  C5            			PUSH	BC
   5168  E5            			PUSH	HL
   5169  3E91          			LD		A,91H      ;HEADER SAVEコマンド91H
-  516B  CD3E52        			CALL	MCMD       ;コマンドコード送信
+  516B  CD4E52        			CALL	MCMD       ;コマンドコード送信
+  516E  A7            			AND		A          ;00以外ならERROR
+  516F  C26052        			JP		NZ,MERR
                       	
-  516E  218810        			LD		HL,IBUFE
-  5171  0680          			LD		B,80H
-  5173  7E            	MSH1:	LD		A,(HL)     ;インフォメーション ブロック送信
-  5174  CD3551        			CALL	SNDBYTE
-  5177  23            			INC		HL
-  5178  05            			DEC		B
-  5179  20F8          			JR		NZ,MSH1
+  5172  218810        			LD		HL,IBUFE
+  5175  0680          			LD		B,80H
+  5177  7E            	MSH1:	LD		A,(HL)     ;インフォメーション ブロック送信
+  5178  CD3551        			CALL	SNDBYTE
+  517B  23            			INC		HL
+  517C  05            			DEC		B
+  517D  20F8          			JR		NZ,MSH1
                       	
-  517B  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  517E  A7            			AND		A          ;00以外ならERROR
-  517F  C25452        			JP		NZ,MERR
+  517F  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  5182  A7            			AND		A          ;00以外ならERROR
+  5183  C26052        			JP		NZ,MERR
                       	
-  5182  C34E52        			JP		MRET       ;正常RETURN
+  5186  C35A52        			JP		MRET       ;正常RETURN
                       	
                       	;******************** 0475H MONITOR ライト データ代替処理 **********************
-  5185                	MSDAT:
-  5185  F3            			DI
-  5186  D5            			PUSH	DE
-  5187  C5            			PUSH	BC
-  5188  E5            			PUSH	HL
-  5189  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
-  518B  CD3E52        			CALL	MCMD       ;コマンドコード送信
+  5189                	MSDAT:
+  5189  F3            			DI
+  518A  D5            			PUSH	DE
+  518B  C5            			PUSH	BC
+  518C  E5            			PUSH	HL
+  518D  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
+  518F  CD4E52        			CALL	MCMD       ;コマンドコード送信
+  5192  A7            			AND		A          ;00以外ならERROR
+  5193  C26052        			JP		NZ,MERR
                       	
-  518E  219A10        			LD		HL,FSIZE   ;FSIZE送信
-  5191  7E            			LD		A,(HL)
-  5192  CD3551        			CALL	SNDBYTE
-  5195  23            			INC		HL
-  5196  7E            			LD		A,(HL)
-  5197  CD3551        			CALL	SNDBYTE
+  5196  219A10        			LD		HL,FSIZE   ;FSIZE送信
+  5199  7E            			LD		A,(HL)
+  519A  CD3551        			CALL	SNDBYTE
+  519D  23            			INC		HL
+  519E  7E            			LD		A,(HL)
+  519F  CD3551        			CALL	SNDBYTE
                       	
-  519A  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  519D  A7            			AND		A          ;00以外ならERROR
-  519E  C25452        			JP		NZ,MERR
+  51A2  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  51A5  A7            			AND		A          ;00以外ならERROR
+  51A6  C26052        			JP		NZ,MERR
                       	
-  51A1  ED5B9A10      			LD		DE,(FSIZE)
-  51A5  2A9C10        			LD		HL,(SADRS)
-  51A8  7E            	MSD1:	LD		A,(HL)
-  51A9  CD3551        			CALL	SNDBYTE      ;SADRSからFSIZE Byteを送信。分割セーブの場合、直前に0436HでOPENされたファイルを対象として256バイトずつ0475HがCALLされる。
-  51AC  1B            			DEC		DE
-  51AD  7A            			LD		A,D
-  51AE  B3            			OR		E
-  51AF  23            			INC		HL
-  51B0  20F6          			JR		NZ,MSD1
+  51A9  ED5B9A10      			LD		DE,(FSIZE)
+  51AD  2A9C10        			LD		HL,(SADRS)
+  51B0  7E            	MSD1:	LD		A,(HL)
+  51B1  CD3551        			CALL	SNDBYTE      ;SADRSからFSIZE Byteを送信。分割セーブの場合、直前に0436HでOPENされたファイルを対象として256バイトずつ0475HがCALLされる。
+  51B4  1B            			DEC		DE
+  51B5  7A            			LD		A,D
+  51B6  B3            			OR		E
+  51B7  23            			INC		HL
+  51B8  20F6          			JR		NZ,MSD1
                       			
-  51B2  C34E52        			JP		MRET       ;正常RETURN
+  51BA  C35A52        			JP		MRET       ;正常RETURN
                       	
                       	;************************** 04D8H MONITOR リード インフォメーション代替処理 *****************
-  51B5                	MLHED:
-  51B5  F3            			DI
-  51B6  D5            			PUSH	DE
-  51B7  C5            			PUSH	BC
-  51B8  E5            			PUSH	HL
-  51B9  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
-  51BB  CD3E52        			CALL	MCMD       ;コマンドコード送信
+  51BD                	MLHED:
+  51BD  F3            			DI
+  51BE  D5            			PUSH	DE
+  51BF  C5            			PUSH	BC
+  51C0  E5            			PUSH	HL
+  51C1  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
+  51C3  CD4E52        			CALL	MCMD       ;コマンドコード送信
+  51C6  A7            			AND		A          ;00以外ならERROR
+  51C7  C26052        			JP		NZ,MERR
                       	
                       			
-  51BE  118910        			LD		DE,FNAME
+  51CA  118910        			LD		DE,FNAME
                       	
-  51C1  0610          	MLH2:	LD		B,10H
-  51C3  1A            	MLH4:	LD		A,(DE)     ;FNAME送信
-  51C4  CD3551        			CALL	SNDBYTE
-  51C7  13            			INC		DE
-  51C8  05            			DEC		B
-  51C9  20F8          			JR		NZ,MLH4
+  51CD  0610          	MLH2:	LD		B,10H
+  51CF  1A            	MLH4:	LD		A,(DE)     ;FNAME送信
+  51D0  CD3551        			CALL	SNDBYTE
+  51D3  13            			INC		DE
+  51D4  05            			DEC		B
+  51D5  20F8          			JR		NZ,MLH4
                       	
-  51CB  0611          			LD		B,11H
-  51CD  3E0D          	MLH3:	LD		A,0DH
-  51CF  CD3551        			CALL	SNDBYTE
-  51D2  05            			DEC		B
-  51D3  20F8          			JR		NZ,MLH3
+  51D7  0611          			LD		B,11H
+  51D9  3E0D          	MLH3:	LD		A,0DH
+  51DB  CD3551        			CALL	SNDBYTE
+  51DE  05            			DEC		B
+  51DF  20F8          			JR		NZ,MLH3
                       	
-  51D5  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  51D8  A7            			AND		A          ;00以外ならERROR
-  51D9  C25452        			JP		NZ,MERR
+  51E1  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  51E4  A7            			AND		A          ;00以外ならERROR
+  51E5  C26052        			JP		NZ,MERR
                       	
-  51DC  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  51DF  A7            			AND		A          ;00以外ならERROR
-  51E0  C25452        			JP		NZ,MERR
+  51E8  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  51EB  A7            			AND		A          ;00以外ならERROR
+  51EC  C26052        			JP		NZ,MERR
                       	
-  51E3  218810        			LD		HL,IBUFE
-  51E6  0680          			LD		B,80H
-  51E8  CD2251        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
-  51EB  77            			LD		(HL),A
-  51EC  23            			INC		HL
-  51ED  05            			DEC		B
-  51EE  20F8          			JR		NZ,MLH5
+  51EF  218810        			LD		HL,IBUFE
+  51F2  0680          			LD		B,80H
+  51F4  CD2251        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
+  51F7  77            			LD		(HL),A
+  51F8  23            			INC		HL
+  51F9  05            			DEC		B
+  51FA  20F8          			JR		NZ,MLH5
                       	
-  51F0  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  51F3  A7            			AND		A          ;00以外ならERROR
-  51F4  C25452        			JP		NZ,MERR
+  51FC  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  51FF  A7            			AND		A          ;00以外ならERROR
+  5200  C26052        			JP		NZ,MERR
                       	
-  51F7  118810        			LD		DE,IBUFE
-  51FA  210811        			LD		HL,LBUF
-  51FD  0680          			LD		B,80H
-  51FF  1A            	MLH6:	LD		A,(DE)
-  5200  77            			LD		(HL),A
-  5201  13            			INC		DE
-  5202  23            			INC		HL
-  5203  05            			DEC		B
-  5204  20F9          			JR		NZ,MLH6
-  5206  218810        			LD		HL,IBUFE
-  5209  7E            			LD		A,(HL)
+  5203  118810        			LD		DE,IBUFE
+  5206  210811        			LD		HL,LBUF
+  5209  0680          			LD		B,80H
+  520B  1A            	MLH6:	LD		A,(DE)
+  520C  77            			LD		(HL),A
+  520D  13            			INC		DE
+  520E  23            			INC		HL
+  520F  05            			DEC		B
+  5210  20F9          			JR		NZ,MLH6
+  5212  218810        			LD		HL,IBUFE
+  5215  7E            			LD		A,(HL)
                       	
-  520A  1842          			JR		MRET       ;正常RETURN
+  5216  1842          			JR		MRET       ;正常RETURN
                       	
                       	;**************************** 04F8H MONITOR リード データ代替処理 ********************
-  520C                	MLDAT:
-  520C  F3            			DI
-  520D  D5            			PUSH	DE
-  520E  C5            			PUSH	BC
-  520F  E5            			PUSH	HL
-  5210  3E94          			LD		A,94H      ;DATA LOADコマンド94H
-  5212  CD3E52        			CALL	MCMD       ;コマンドコード送信
+  5218                	MLDAT:
+  5218  F3            			DI
+  5219  D5            			PUSH	DE
+  521A  C5            			PUSH	BC
+  521B  E5            			PUSH	HL
+  521C  3E94          			LD		A,94H      ;DATA LOADコマンド94H
+  521E  CD4E52        			CALL	MCMD       ;コマンドコード送信
+  5221  A7            			AND		A          ;00以外ならERROR
+  5222  C26052        			JP		NZ,MERR
                       	
-  5215  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  5218  A7            			AND		A          ;00以外ならERROR
-  5219  C25452        			JP		NZ,MERR
+  5225  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  5228  A7            			AND		A          ;00以外ならERROR
+  5229  C26052        			JP		NZ,MERR
                       	
-  521C  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  521F  A7            			AND		A          ;00以外ならERROR
-  5220  C25452        			JP		NZ,MERR
+  522C  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  522F  A7            			AND		A          ;00以外ならERROR
+  5230  C26052        			JP		NZ,MERR
                       	
-  5223  119A10        			LD		DE,FSIZE   ;FSIZE送信
-  5226  1A            			LD		A,(DE)
-  5227  CD3551        			CALL	SNDBYTE
-  522A  13            			INC		DE
-  522B  1A            			LD		A,(DE)
-  522C  CD3551        			CALL	SNDBYTE
-  522F  CD1051        			CALL	DBRCV      ;FSIZE分のデータを受信し、SADRSから格納。分割ロードの場合、直前に0436HでOPENされたファイルを対象として256バイトずつSADRSが加算されて04F8HがCALLされる。
+  5233  119A10        			LD		DE,FSIZE   ;FSIZE送信
+  5236  1A            			LD		A,(DE)
+  5237  CD3551        			CALL	SNDBYTE
+  523A  13            			INC		DE
+  523B  1A            			LD		A,(DE)
+  523C  CD3551        			CALL	SNDBYTE
+  523F  CD1051        			CALL	DBRCV      ;FSIZE分のデータを受信し、SADRSから格納。分割ロードの場合、直前に0436HでOPENされたファイルを対象として256バイトずつSADRSが加算されて04F8HがCALLされる。
                       	
-  5232  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  5235  A7            			AND		A          ;00以外ならERROR
-  5236  C25452        			JP		NZ,MERR
+  5242  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  5245  A7            			AND		A          ;00以外ならERROR
+  5246  C26052        			JP		NZ,MERR
                       	
-  5239  1813          			JR		MRET       ;正常RETURN
+  5249  180F          			JR		MRET       ;正常RETURN
                       	
                       	;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
-  523B  AF            	MVRFY:	XOR		A          ;正常終了フラグ
-  523C  FB            			EI
-  523D  C9            			RET
-                      	
-                      	;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
-  523E  F5            	MCMD:	PUSH	AF
-  523F  CD0551        			CALL	INIT
-  5242  F1            			POP		AF
-  5243  CD3551        			CALL	SNDBYTE    ;コマンドコード送信
-  5246  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  5249  A7            			AND		A          ;00以外ならERROR
-  524A  C25452        			JP		NZ,MERR
+  524B  AF            	MVRFY:	XOR		A          ;正常終了フラグ
+  524C  FB            			EI
   524D  C9            			RET
                       	
+                      	;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
+  524E  F5            	MCMD:	PUSH	AF
+  524F  CD0551        			CALL	INIT
+  5252  F1            			POP		AF
+  5253  CD3551        			CALL	SNDBYTE    ;コマンドコード送信
+  5256  CD2251        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  5259  C9            			RET
+                      	
                       	;****** 代替処理用正常RETURN処理 **********
-  524E  E1            	MRET:	POP		HL
-  524F  C1            			POP		BC
-  5250  D1            			POP		DE
-  5251  AF            			XOR		A
-  5252  FB            			EI
-  5253  C9            			RET
+  525A  E1            	MRET:	POP		HL
+  525B  C1            			POP		BC
+  525C  D1            			POP		DE
+  525D  AF            			XOR		A
+  525E  FB            			EI
+  525F  C9            			RET
                       	
                       	;******* 代替処理用ERROR処理 **************
-  5254                	MERR:
-  5254  E1            			POP		HL
-  5255  C1            			POP		BC
-  5256  D1            			POP		DE
-  5257  3E02          			LD		A,02H
-  5259  37            			SCF
-  525A  FB            			EI
-  525B  C9            			RET
+  5260                	MERR:
+  5260  E1            			POP		HL
+  5261  C1            			POP		BC
+  5262  D1            			POP		DE
+  5263  3E02          			LD		A,02H
+  5265  37            			SCF
+  5266  FB            			EI
+  5267  C9            			RET
                       			
-  525C                			END
+  5268                			END
 

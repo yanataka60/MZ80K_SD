@@ -42,10 +42,10 @@ void setup(){
   pinMode( PB7PIN,OUTPUT); //送信データ
   pinMode( FLGPIN,OUTPUT); //FLG
 
-  pinMode( PA0PIN,INPUT); //受信データ
-  pinMode( PA1PIN,INPUT); //受信データ
-  pinMode( PA2PIN,INPUT); //受信データ
-  pinMode( PA3PIN,INPUT); //受信データ
+  pinMode( PA0PIN,INPUT_PULLUP); //受信データ
+  pinMode( PA1PIN,INPUT_PULLUP); //受信データ
+  pinMode( PA2PIN,INPUT_PULLUP); //受信データ
+  pinMode( PA3PIN,INPUT_PULLUP); //受信データ
 
   digitalWrite(PB0PIN,LOW);
   digitalWrite(PB1PIN,LOW);
@@ -57,11 +57,16 @@ void setup(){
   digitalWrite(PB7PIN,LOW);
   digitalWrite(FLGPIN,LOW);
 
-//LOWになるまでループ
-  while(digitalRead(CHKPIN) == HIGH){
-  }
   // SD初期化
-////  Serial.println("MZ80K TEST");
+  if( !SD.begin(CABLESELECTPIN,8) )
+  {
+////    Serial.println("Failed : SD.begin");
+    eflg = true;
+  } else {
+////    Serial.println("OK : SD.begin");
+    eflg = false;
+  }
+////  Serial.println("START");
 }
 
 //4BIT受信
@@ -69,10 +74,10 @@ byte rcv4bit(void){
 //HIGHになるまでループ
   while(digitalRead(CHKPIN) != HIGH){
   }
-//FLGをセット
-  digitalWrite(FLGPIN,HIGH);
 //受信
   byte j_data = digitalRead(PA0PIN)+digitalRead(PA1PIN)*2+digitalRead(PA2PIN)*4+digitalRead(PA3PIN)*8;
+//FLGをセット
+  digitalWrite(FLGPIN,HIGH);
 //LOWになるまでループ
   while(digitalRead(CHKPIN) == HIGH){
   }
@@ -90,25 +95,33 @@ byte rcv1byte(void){
 }
 
 //1BIT送信
-void snd1bit(int i,byte j_data){
-  if(j_data==1){
-    digitalWrite(i,HIGH);
-   }else{
-    digitalWrite(i,LOW);
-  }
-}
+//void snd1bit(int i,byte j_data){
+//  if(j_data==1){
+//    digitalWrite(i,HIGH);
+//   }else{
+//    digitalWrite(i,LOW);
+//  }
+//}
 
 //1BYTE送信
 void snd1byte(byte i_data){
 //下位ビットから8ビット分をセット
-  snd1bit(PB0PIN,(i_data)&0x01);
-  snd1bit(PB1PIN,(i_data>>1)&0x01);
-  snd1bit(PB2PIN,(i_data>>2)&0x01);
-  snd1bit(PB3PIN,(i_data>>3)&0x01);
-  snd1bit(PB4PIN,(i_data>>4)&0x01);
-  snd1bit(PB5PIN,(i_data>>5)&0x01);
-  snd1bit(PB6PIN,(i_data>>6)&0x01);
-  snd1bit(PB7PIN,(i_data>>7)&0x01);
+  digitalWrite(PB0PIN,(i_data)&0x01);
+  digitalWrite(PB1PIN,(i_data>>1)&0x01);
+  digitalWrite(PB2PIN,(i_data>>2)&0x01);
+  digitalWrite(PB3PIN,(i_data>>3)&0x01);
+  digitalWrite(PB4PIN,(i_data>>4)&0x01);
+  digitalWrite(PB5PIN,(i_data>>5)&0x01);
+  digitalWrite(PB6PIN,(i_data>>6)&0x01);
+  digitalWrite(PB7PIN,(i_data>>7)&0x01);
+//  snd1bit(PB0PIN,(i_data)&0x01);
+//  snd1bit(PB1PIN,(i_data>>1)&0x01);
+//  snd1bit(PB2PIN,(i_data>>2)&0x01);
+//  snd1bit(PB3PIN,(i_data>>3)&0x01);
+//  snd1bit(PB4PIN,(i_data>>4)&0x01);
+//  snd1bit(PB5PIN,(i_data>>5)&0x01);
+//  snd1bit(PB6PIN,(i_data>>6)&0x01);
+//  snd1bit(PB7PIN,(i_data>>7)&0x01);
   digitalWrite(FLGPIN,HIGH);
 //HIGHになるまでループ
   while(digitalRead(CHKPIN) != HIGH){
@@ -736,127 +749,122 @@ void loop()
   digitalWrite(PB6PIN,LOW);
   digitalWrite(PB7PIN,LOW);
   digitalWrite(FLGPIN,LOW);
-  // SD初期化
-  if( !SD.begin(CABLESELECTPIN,8) )
-  {
-////    Serial.println("Failed : SD.begin");
-    eflg = true;
-  } else {
-////    Serial.println("OK : SD.begin");
-    eflg = false;
-  }
-////  Serial.println("START");
 //コマンド取得待ち
   byte cmd = rcv1byte();
 ////  Serial.println(cmd,HEX);
   if (eflg == false){
+    switch(cmd) {
 //80hでSDカードにsave
-    if (cmd ==0x80){
+      case 0x80:
 ////  Serial.println("SAVE START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_save();
-    }
+        snd1byte(0x00);
+        f_save();
+        break;
 //81hでSDカードからload
-    if (cmd ==0x81){
+      case 0x81:
 ////  Serial.println("LOAD START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_load();
-    }
+        snd1byte(0x00);
+        f_load();
+        break;
 //82hで指定ファイルを0000.mztとしてリネームコピー
-    if (cmd ==0x82){
+      case 0x82:
 ////  Serial.println("ASTART START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      astart();
-    }
+        snd1byte(0x00);
+        astart();
+        break;
 //83hでファイルリスト出力
-    if (cmd ==0x83){
+      case 0x83:
 ////  Serial.println("FILE LIST START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      dirlist();
-    }
+        snd1byte(0x00);
+        dirlist();
+        break;
 //84hでファイルDelete
-    if (cmd ==0x84){
+      case 0x84:
 ////  Serial.println("FILE Delete START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_del();
-    }
+        snd1byte(0x00);
+        f_del();
+        break;
 //85hでファイルリネーム
-    if (cmd ==0x85){
+      case 0x85:
 ////  Serial.println("FILE Rename START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_ren();
-    }
+        snd1byte(0x00);
+        f_ren();
+        break;
+      case 0x86:  
 //86hでファイルダンプ
-    if (cmd ==0x86){
 ////  Serial.println("FILE Dump START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_dump();
-    }
+        snd1byte(0x00);
+        f_dump();
+        break;
+      case 0x87:  
 //87hでファイルコピー
-    if (cmd ==0x87){
 ////  Serial.println("FILE Copy START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      f_copy();
-    }
+        snd1byte(0x00);
+        f_copy();
+        break;
+      case 0x91:
 //91hで0436H MONITOR ライト インフォメーション代替処理
-    if (cmd ==0x91){
 ////  Serial.println("0436H START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      mon_whead();
-    }
+        snd1byte(0x00);
+        mon_whead();
+        break;
 //92hで0475H MONITOR ライト データ代替処理
-    if (cmd ==0x92){
+      case 0x92:
 ////  Serial.println("0475H START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      mon_wdata();
-    }
+        snd1byte(0x00);
+        mon_wdata();
+        break;
 //93hで04D8H MONITOR リード インフォメーション代替処理
-    if (cmd ==0x93){
+      case 0x93:
 ////  Serial.println("04D8H START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      mon_lhead();
-    }
+        snd1byte(0x00);
+        mon_lhead();
+        break;
 //94hで04F8H MONITOR リード データ代替処理
-    if (cmd ==0x94){
+      case 0x94:
 ////  Serial.println("04F8H START");
 //ちょっとだけWait
-      delay(1);
+        delay(10);
 //状態コード送信(OK)
-      snd1byte(0x00);
-      mon_ldata();
+        snd1byte(0x00);
+        mon_ldata();
+        break;
+      default:
+//状態コード送信(CMD ERROR)
+        snd1byte(0xF4);
     }
   } else {
 //状態コード送信(ERROR)

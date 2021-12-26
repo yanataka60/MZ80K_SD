@@ -231,6 +231,8 @@ CMDERR:                     ;コマンド異常
 ;送信ヘッダ情報をセットし、SDカードへSAVE実行
 SDSAVE:	LD		A,80H      ;SAVEコマンド80H
 		CALL	STCD
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
 		CALL	HDSEND     ;ヘッダ情報送信
 		CALL	RCVBYTE    ;状態取得(00H=OK)
 		AND		A          ;00以外ならERROR
@@ -239,6 +241,8 @@ SDSAVE:	LD		A,80H      ;SAVEコマンド80H
 		LD		DE,MSG_SV
 		JR		ERRMSG
 
+SVER0:
+		POP		DE         ;CALL元STACKを破棄する
 SVERR:
 		CP		0F0H
 		JR		NZ,ERR2
@@ -253,8 +257,12 @@ ERR3:	CP		0F1H
 		LD		DE,MSG_F1  ;NOT FIND FILE
 		JR		ERRMSG
 ERR4:	CP		0F3H
-		JR		NZ,ERR99
+		JR		NZ,ERR5
 		LD		DE,MSG_F3  ;FILE EXIST
+		JR		ERRMSG
+ERR5:	CP		0F4H
+		JR		NZ,ERR99
+		LD		DE,MSG_CMD
 		JR		ERRMSG
 ERR99:	CALL	PRTBYT
 		LD		DE,MSG99   ;その他ERROR
@@ -357,6 +365,8 @@ DIRLIST:
 		PUSH	AF
 		LD		A,83H      ;DIRLISTコマンド83Hを送信
 		CALL	STCD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
 		POP		AF
 		CALL	SNDBYTE           ;ページ指示を送信
 DL1:	LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
@@ -678,10 +688,10 @@ STMW9:	JP		MON
 ;受信DATAをAレジスタにセットしてリターン
 RCVBYTE:
 		CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
-		LD		A,05H
-		OUT		(0DBH),A    ;PORTC BIT2 <- 1
 		IN		A,(0D9h)   ;PORTB -> A
 		PUSH 	AF
+		LD		A,05H
+		OUT		(0DBH),A    ;PORTC BIT2 <- 1
 		CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
 		LD		A,04H
 		OUT		(0DBH),A    ;PORTC BIT2 <- 0
@@ -744,8 +754,6 @@ STFN1:	INC		DE         ;ファイルネームまでスペース読み飛ばし
 ;**** コマンド送信 (IN:A コマンドコード)****
 STCD:	CALL	SNDBYTE    ;Aレジスタのコマンドコードを送信
 		CALL	RCVBYTE    ;状態取得(00H=OK)
-		AND		A          ;00以外ならERROR
-		JP		NZ,SVERR
 		RET
 
 ;**** ファイルネーム送信(IN:HL ファイルネームの先頭) ******
@@ -758,8 +766,6 @@ STFS1:	LD		A,(HL)     ;FNAME送信
 		LD		A,0DH
 		CALL	SNDBYTE
 		CALL	RCVBYTE    ;状態取得(00H=OK)
-		AND		A          ;00以外ならERROR
-		JP		NZ,SVERR
 		RET
 
 ;**** コマンド、ファイル名送信 (IN:A コマンドコード HL:ファイルネームの先頭)****
@@ -767,7 +773,11 @@ STCMD:	CALL	STFN       ;ファイルネーム取得
 		PUSH	HL
 		CALL	STCD       ;コマンドコード送信
 		POP		HL
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVER0
 		CALL	STFS       ;ファイルネーム送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVER0
 		RET
 
 ;******** MESSAGE DATA ********************
@@ -883,6 +893,8 @@ MSHED:
 		PUSH	HL
 		LD		A,91H      ;HEADER SAVEコマンド91H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		LD		DE,WRMSG   ;'WRITING '
 		CALL	MSGPR        ;メッセージ表示
@@ -910,6 +922,8 @@ MSDAT:
 		PUSH	HL
 		LD		A,92H      ;DATA SAVEコマンド92H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		LD		HL,FSIZE   ;FSIZE送信
 		LD		A,(HL)
@@ -941,6 +955,8 @@ MLHED:
 		PUSH	HL
 		LD		A,93H      ;HEADER LOADコマンド93H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		LD		B,08H
 		LD		DE,LBUF
@@ -1011,6 +1027,8 @@ MLDAT:
 		PUSH	HL
 		LD		A,94H      ;DATA LOADコマンド94H
 		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
 
 		CALL	RCVBYTE    ;状態取得(00H=OK)
 		AND		A          ;00以外ならERROR
@@ -1045,8 +1063,6 @@ MCMD:	PUSH	AF
 		POP		AF
 		CALL	SNDBYTE    ;コマンドコード送信
 		CALL	RCVBYTE    ;状態取得(00H=OK)
-		AND		A          ;00以外ならERROR
-		JP		NZ,MERR
 		RET
 
 ;****** 代替処理用正常RETURN処理 **********
