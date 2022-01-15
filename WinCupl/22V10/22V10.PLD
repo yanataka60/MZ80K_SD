@@ -35,7 +35,7 @@ Pin 17 = IOWD;
 /** Logic **/
 PIOCE = !(AD7 & AD6 & !(AD5) & AD4 & AD3 & !(AD2));
 ROMCE = MEMRQ # !(AD15 & AD14 & AD13 & AD12);
-MEMRD = RD;
+MEMRD = MEMRQ # RD;
 IORD  = IOREQ # RD;
 IOWD  = IOREQ # WD;
 

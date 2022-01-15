@@ -33,7 +33,8 @@ IOWD =>
   # WD
 
 MEMRD =>
-    RD
+    MEMRQ
+  # RD
 
 PIOCE =>
     !AD2 & AD3 & AD4 & !AD5 & AD6 & AD7
