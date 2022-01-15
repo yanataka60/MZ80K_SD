@@ -37,10 +37,20 @@ MEMRD =>
   # RD
 
 PIOCE =>
-    !AD2 & AD3 & AD4 & !AD5 & AD6 & AD7
+    IOREQ
+  # !AD7
+  # !AD6
+  # AD5
+  # !AD4
+  # !AD3
+  # AD2
 
 ROMCE =>
-    AD12 & AD13 & AD14 & AD15
+    MEMRQ
+  # !AD15
+  # !AD14
+  # !AD13
+  # !AD12
 
 IORD.oe  =>
     1 
