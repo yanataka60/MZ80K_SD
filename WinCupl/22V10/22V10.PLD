@@ -33,9 +33,9 @@ Pin 18 = IORD;
 Pin 17 = IOWD;
 
 /** Logic **/
-PIOCE = IOREQ # !(AD7 & AD6 & !(AD5) & AD4 & AD3 & !(AD2));
+PIOCE = !(AD7 & AD6 & !(AD5) & AD4 & AD3 & !(AD2));
 ROMCE = MEMRQ # !(AD15 & AD14 & AD13 & AD12);
 MEMRD = RD;
-IORD  = RD;
-IOWD  = WD;
+IORD  = IOREQ # RD;
+IOWD  = IOREQ # WD;
 
