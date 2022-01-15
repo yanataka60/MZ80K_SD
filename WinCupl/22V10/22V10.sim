@@ -25,16 +25,13 @@ PIN  16 =  WD
 
 %EQUATION
 IORD =>
-    IOREQ
-  # RD
+    RD
 
 IOWD =>
-    IOREQ
-  # WD
+    WD
 
 MEMRD =>
-    MEMRQ
-  # RD
+    RD
 
 PIOCE =>
     IOREQ
