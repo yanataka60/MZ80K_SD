@@ -1,6 +1,6 @@
 # MZ-700 S-BASIC 1Z-007BをMZ-80K_SD対応にするパッチ
 
-　S-BASIC 1Z-007BはMONITOR 1Z-009Bをコールしていないため、MZ-80K_SD対応にするためにパッチを当てる必要があります。
+　S-BASIC 1Z-007BはMONITOR 1Z-009A、1Z-009Bをコールしていないため、MZ-80K_SD対応にするためにパッチを当てる必要があります。
 
 　S-BASICの仕様を把握してはいないのですが、試行錯誤の末、一応正常にMZ-80K_SDが動いていると思われますので公開します。
 
@@ -37,7 +37,7 @@
 　DOSファイル名が「TEST SBASIC EIGHT.MZT」の場合、LOAD "TEST SBASIC EIGHT"と入力しても「TEST SBASIC EIGH.MZT」というDOSファイルを探しに行くためロードできません。
 
 ## 使用方法
-　パッチを当てたS-BASIC.MZTをFDコマンドでロードします。MONITOR 1Z-009Bにパッチを当てる必要はありませんので、FT.MZTの実行も不要です。
+　パッチを当てたS-BASIC.MZTをFDコマンドでロードします。MONITOR 1Z-009A、1Z-009Bにパッチを当てる必要はありませんので、FT.MZTの実行も不要です。
 
 ## 追記
 2021.12.26
