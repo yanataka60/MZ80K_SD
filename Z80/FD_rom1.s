@@ -1,4 +1,5 @@
 ;2021.12.12 MZ-700でFDP、FDMが文字化けする現象に対処
+;2022. 1.23 04D8H MONITOR リード インフォメーション代替処理のバグを修正
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -961,7 +962,7 @@ MLHED:
 		LD		B,08H
 		LD		DE,LBUF
 		LD		A,0DH
-MLH0:	LD		(HL),A
+MLH0:	LD		(DE),A
 		INC		DE
 		DEC		B
 		JR		NZ,MLH0

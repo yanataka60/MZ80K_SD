@@ -1,5 +1,6 @@
 			  Z80 ASSEMBLER - ZASM VER 1.6
                       	;2021.12.12 MZ-700でFDP、FDMが文字化けする現象に対処
+                      	;2022. 1.23 04D8H MONITOR リード インフォメーション代替処理のバグを修正
                       	;
   0003                	GETL		EQU		0003H
   0006                	LETLN		EQU		0006H
@@ -962,7 +963,7 @@
   F76F  0608          			LD		B,08H
   F771  11A311        			LD		DE,LBUF
   F774  3E0D          			LD		A,0DH
-  F776  77            	MLH0:	LD		(HL),A
+  F776  12            	MLH0:	LD		(DE),A
   F777  13            			INC		DE
   F778  05            			DEC		B
   F779  20FB          			JR		NZ,MLH0
