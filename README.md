@@ -27,7 +27,7 @@
 　U3: 8255
 
 　U4: Arduino Pro Mini 5V又は同等品(注1)
-　
+
 　U5 U6: 74LS30
 
 　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)
@@ -338,33 +338,33 @@ NEW NAME:TEST2[CR]
 
 ## SD-CARDに読み書きできるかを試した結果
 
-　読み書き出来たもの
+　読み書き出来たもの(アルファベット順)
 
-　　BASE-80 Ver35
+　　BASE-80 Ver35【I/O 1981年4月号】
 
 　　BASIC SP-5030(パッチあて必要なバージョンあり)
 
-　　CAP-Xインタプリタ
+　　CAP-Xインタプリタ【I/O 1980年5月号】
 
-　　EDASM V1.2B
+　　EDASM V1.2B【Oh!MZ 1985年1月号】
 
-　　FORM VER1.0
+　　FORM VER1.0【I/O 1980年6月号】
 
-　　FORTRAN-MZ V.1
+　　FORTRAN-MZ V.1【I/O 1981年1月号】
 
-　　GAME-MZ80K V.1(注1)
+　　GAME-MZ80K V.1(注1)【ASCII 1979年10月号】
 
 　　HU-BASIC V1.3
 
-　　M-FORTH/MZ V1.1(注1)
+　　M-FORTH/MZ V1.1(注1)【I/O 1981年3月号】
 
-　　micro PASCAL-MZ VER 2.2
+　　micro PASCAL-MZ VER 2.2【ASCII 1980年6月号】
 
-　　MONIOS
+　　MONIOS【月刊マイコン 1982年2月号】
 
-　　PALL
+　　PALL【I/O 1979年12月号】
 
-　　S-OS SWORD(S-OS用アプリ含む)
+　　S-OS SWORD(S-OS用アプリ含む)【Oh!MZ 1986年2月号】【再掲載 Oh!MZ 1987年3月号】
 
 　　SP-2101 Z80 ASSEMBLER
 
@@ -374,19 +374,25 @@ NEW NAME:TEST2[CR]
 
 　　SP-2401 SYMB DEBUGGER
 
-　　TL/1(注1)
+　　TL/1(注1)【ASCII 1981年5月号】
 
-　　TTL VERSION 1.1
+　　TTL VERSION 1.1【Oh!MZ 1984年10月号】
 
-　　WICS INTERPRETER VER 1.1
+　　WICS INTERPRETER VER 1.1【I/O 1981年10月号】
+
+　　8080用テキスト・エディタ＆アセンブラ(注2)【I/O 1980年9月号】
+
 
 注1)このアプリケーションはMZ-700非対応です。MZ-700で動かすには、0h!MZ別冊 ADVANCED MZ-700に掲載されているSP-1002のMZ-700対応版 NZ-700が必要です。NZ-700にSP-1002と同じようにMZ-80K_SDのパッチをあてることでMZ-700でも同様にLOAD、SAVEが可能となります。
 
+注2)SAVE時に指定したファイルネームが15文字以下の場合、15文字までスペースが入った後に「.MZT」が付加され保存されます。FDRコマンドで空白を除いたファイルネームにRENAMEしてください。
+
+
 　読み書き出来なかったもの
 
-　　EDAS FOR MZ-1200 VER 1.2
+　　EDAS FOR MZ-1200 VER 1.2【I/O 1982年11月号】
 
-　　EXIT MONITOR
+　　EXIT MONITOR【ASCII 1981年6月号】
 
 ## MZ700用プログラムで起動確認したもの
 　　S-BASIC 1Z-007B(LOAD、SAVEもSD対応となるパッチを公開しました)
