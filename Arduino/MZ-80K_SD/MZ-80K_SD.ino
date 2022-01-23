@@ -146,12 +146,12 @@ void addmzt(char *f_name){
   while (f_name[lp1] != 0x0D){
     lp1++;
   }
-  if (f_name[lp1-4]!='.' |
-    ( f_name[lp1-3]!='M' &
-      f_name[lp1-3]!='m' ) |
-    ( f_name[lp1-2]!='Z' &
-      f_name[lp1-2]!='z' ) |
-    ( f_name[lp1-1]!='T' &
+  if (f_name[lp1-4]!='.' ||
+    ( f_name[lp1-3]!='M' &&
+      f_name[lp1-3]!='m' ) ||
+    ( f_name[lp1-2]!='Z' &&
+      f_name[lp1-2]!='z' ) ||
+    ( f_name[lp1-1]!='T' &&
       f_name[lp1-1]!='t' ) ){
          f_name[lp1++] = '.';
          f_name[lp1++] = 'm';
@@ -368,11 +368,11 @@ void dirlist(void){
   int cntl2 = 0;
   unsigned int br_chk =0;
 //全件出力の場合には20件出力したところで一時停止、キー入力により継続、打ち切りを選択
-  while (entry & cnt1< 20 & br_chk == 0) {
+  while (entry && cnt1< 20 && br_chk == 0) {
     entry.getName(f_name,36);
     unsigned int lp1=0;
 //一件送信
-    while (lp1<=36 & f_name[lp1]!=0x00){
+    while (lp1<=36 && f_name[lp1]!=0x00){
       snd1byte(upper(f_name[lp1]));
       lp1++;
     }
@@ -611,8 +611,9 @@ char m_info[130];
     m_info[lp1] = rcv1byte();
   }
 //S-OS SWORDからは最後が20hのファイルネームが送られて来るため0dhを付加
+//8080用テキスト・エディタ＆アセンブラからファイルネームの後ろに20hが送られて来るため0dhに修正
   int lp2 = 17;
-  while (lp2>0 & m_info[lp2] ==0x20){
+  while (lp2>0 && (m_info[lp2] ==0x20 || m_info[lp2] ==0x0d)){
     m_info[lp2]=0x0d;
     lp2--;
   }
