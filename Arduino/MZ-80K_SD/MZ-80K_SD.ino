@@ -612,11 +612,12 @@ char m_info[130];
   }
 //S-OS SWORDからは最後が20hのファイルネームが送られて来るため0dhを付加
 //8080用テキスト・エディタ＆アセンブラからファイルネームの後ろに20hが送られて来るため0dhに修正
-  int lp2 = 17;
-  while (lp2>0 && (m_info[lp2] ==0x20 || m_info[lp2] ==0x0d)){
-    m_info[lp2]=0x0d;
-    lp2--;
-  }
+//MZ-80K側で対処
+//  int lp2 = 17;
+//  while (lp2>0 && (m_info[lp2] ==0x20 || m_info[lp2] ==0x0d)){
+//    m_info[lp2]=0x0d;
+//    lp2--;
+//  }
 //ファイルネーム取り出し
   for (unsigned int lp1 = 0;lp1 < 17;lp1++){
     m_name[lp1] = m_info[lp1+1];

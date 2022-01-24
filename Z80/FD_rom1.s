@@ -1,5 +1,6 @@
 ;2021.12.12 MZ-700でFDP、FDMが文字化けする現象に対処
 ;2022. 1.23 04D8H MONITOR リード インフォメーション代替処理のバグを修正
+;2022. 1.24 ファイルネームの後ろの20h詰めを0dhに修正するための処理をArduino側からMZ-80K側に修正
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -897,6 +898,24 @@ MSHED:
 		AND		A          ;00以外ならERROR
 		JP		NZ,MERR
 
+;S-OS SWORD、8080用テキスト・エディタ＆アセンブラはファイルネームの後ろが20h詰めとなるため0dhに修正
+		LD		B,11H
+		LD		HL,FNAME+10H     ;ファイルネーム
+		LD		A,0DH
+		LD		(HL),A
+MSH0:	LD		A,(HL)
+		CP		0DH
+		JR		Z,MSH1
+		CP		20H
+		JR		NZ,MSH2
+		LD		A,0DH
+		LD		(HL),A
+		
+MSH1:	DEC		B
+		DEC		HL
+		JR		NZ,MSH0
+
+MSH2:	CALL	LETLN
 		LD		DE,WRMSG   ;'WRITING '
 		CALL	MSGPR        ;メッセージ表示
 		LD		DE,FNAME     ;ファイルネーム
@@ -904,11 +923,11 @@ MSHED:
 
 		LD		HL,IBUFE
 		LD		B,80H
-MSH1:	LD		A,(HL)     ;インフォメーション ブロック送信
+MSH3:	LD		A,(HL)     ;インフォメーション ブロック送信
 		CALL	SNDBYTE
 		INC		HL
 		DEC		B
-		JR		NZ,MSH1
+		JR		NZ,MSH3
 
 		CALL	RCVBYTE    ;状態取得(00H=OK)
 		AND		A          ;00以外ならERROR
