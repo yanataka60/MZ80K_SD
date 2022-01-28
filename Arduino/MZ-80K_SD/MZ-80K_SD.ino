@@ -1,3 +1,8 @@
+// 2022. 1.24 ファイルネームの後ろの20h詰めを0dhに修正するための処理をArduino側からMZ-80K側に修正
+//           比較演算子の記述を見直し
+// 2022. 1.25 各コマンド受信時のdelay()を廃止
+// 2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
+//
 #include "SdFat.h"
 #include <SPI.h>
 SdFat SD;
@@ -255,10 +260,12 @@ void f_load(void){
 //ファイルオープン
     File file = SD.open( f_name, FILE_READ );
     if( true == file ){
-      if( file.read() == 0x01){
+//ファイル種類コードの判別を撤廃
+//      if( file.read() == 0x01){
 //状態コード送信(OK)
         snd1byte(0x00);
         int wk1 = 0;
+        wk1 = file.read();
         for (unsigned int lp1 = 0;lp1 <= 16;lp1++){
           wk1 = file.read();
           snd1byte(wk1);
@@ -288,10 +295,10 @@ void f_load(void){
             snd1byte(i_data);
         }
         file.close();
-       } else {
+//       } else {
 //状態コード送信(ERROR)
-        snd1byte(0xF2);
-      }  
+//        snd1byte(0xF2);
+//      }  
      } else {
 //状態コード送信(ERROR)
       snd1byte(0xFF);
@@ -760,7 +767,7 @@ void loop()
       case 0x80:
 ////  Serial.println("SAVE START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_save();
@@ -769,7 +776,7 @@ void loop()
       case 0x81:
 ////  Serial.println("LOAD START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_load();
@@ -778,7 +785,7 @@ void loop()
       case 0x82:
 ////  Serial.println("ASTART START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         astart();
@@ -787,7 +794,7 @@ void loop()
       case 0x83:
 ////  Serial.println("FILE LIST START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         dirlist();
@@ -796,7 +803,7 @@ void loop()
       case 0x84:
 ////  Serial.println("FILE Delete START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_del();
@@ -805,7 +812,7 @@ void loop()
       case 0x85:
 ////  Serial.println("FILE Rename START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_ren();
@@ -814,7 +821,7 @@ void loop()
 //86hでファイルダンプ
 ////  Serial.println("FILE Dump START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_dump();
@@ -823,7 +830,7 @@ void loop()
 //87hでファイルコピー
 ////  Serial.println("FILE Copy START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_copy();
@@ -832,7 +839,7 @@ void loop()
 //91hで0436H MONITOR ライト インフォメーション代替処理
 ////  Serial.println("0436H START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_whead();
@@ -841,7 +848,7 @@ void loop()
       case 0x92:
 ////  Serial.println("0475H START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_wdata();
@@ -850,7 +857,7 @@ void loop()
       case 0x93:
 ////  Serial.println("04D8H START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_lhead();
@@ -859,7 +866,7 @@ void loop()
       case 0x94:
 ////  Serial.println("04F8H START");
 //ちょっとだけWait
-        delay(10);
+//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_ldata();

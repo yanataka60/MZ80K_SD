@@ -116,6 +116,8 @@
 
 　「FT.MZT」をSD-CARDのルートに置き、FD FT[CR]を実行することでRAM MONITORに制御が移ります。
 
+　「FT.MZT」と同等の動作をするFDZコマンドを新設しました。FDZコマンドを使えば「FT.MZT」は必要ありません。
+
 
 　また、紅茶羊羹さんの「MZ⇔PC間でデータを転送する（USB版）」でMZTrans用パッチをMONITOR 1Z-009A、1Z-009Bに当てているとFコマンドが使えないので以下のパッチを当てることで'#'コマンドをつぶして'F'コマンドを復活させます。
 
@@ -290,6 +292,16 @@ NEW NAME:TEST2[CR]
 
 *FDW　1200　12　34　5/[CR]　(12　34まで書き込まれます)
 
+### FDZ[CR]
+　【MZ-700専用】MZ-700用に作成した「FT.MZT」と同等の動きをします。 MONITOR 1Z-009A、1Z-009BをRAMにコピーしたうえでパッチを当てた後、RAM上のMONITORがスタートします。
+
+　MZ-80Kで実行してしまった場合には、RESET動作となります。
+
+### FDU[CR]
+　【MZ-700専用、裏RAM MONITORで運用中にRESETした場合に限る】裏RAMに切り替え裏RAMのMONITORをスタートさせます。
+
+　MZ-80Kで実行してしまった場合には、RESET動作となります。
+
 
 ### アプリケーションからのLOAD
 　L、LOAD等アプリケーションが指定したコマンドの後ろにはIBFファイル名を指定可となっていますが、指定せずにL、LOAD等のコマンドのみで[CR]キーを押します。
@@ -356,6 +368,8 @@ NEW NAME:TEST2[CR]
 
 　　HU-BASIC V1.3
 
+　　LSIアセンブラ(注1)【【ASCII 1979年11月号】
+
 　　M-FORTH/MZ V1.1(注1)【I/O 1981年3月号】
 
 　　micro PASCAL-MZ VER 2.2【ASCII 1980年6月号】
@@ -365,6 +379,8 @@ NEW NAME:TEST2[CR]
 　　PALL【I/O 1979年12月号】
 
 　　S-OS SWORD(S-OS用アプリ含む)【Oh!MZ 1986年2月号】【再掲載 Oh!MZ 1987年3月号】
+
+　　SELF RELOCATABLE DEBUGGER【I/O 1980年11月号】
 
 　　SP-2101 Z80 ASSEMBLER
 
@@ -491,3 +507,17 @@ NEW NAME:TEST2[CR]
 　SAVE時ファイルネームの後ろの空白に対処する処理をArduino側からMZ-80K側に変更。
 
 　Arduinoの比較演算子の記述を見直し。
+
+2022. 1.25
+
+　0475H MONITOR ライト データ代替処理、04F8H MONITOR リード データ代替処理での8255初期化を廃止
+
+　Arduino側での各コマンド受信時のdelay()を廃止
+
+2022.1.26
+
+　FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃した
+
+2022.1.28
+
+　MZ-700用「FT.MZT」の動作をするFDZ、FDUコマンドを新設した。

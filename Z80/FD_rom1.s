@@ -1,6 +1,8 @@
 ;2021.12.12 MZ-700でFDP、FDMが文字化けする現象に対処
 ;2022. 1.23 04D8H MONITOR リード インフォメーション代替処理のバグを修正
 ;2022. 1.24 ファイルネームの後ろの20h詰めを0dhに修正するための処理をArduino側からMZ-80K側に修正
+;2022. 1.25 0475H MONITOR ライト データ代替処理、04F8H MONITOR リード データ代替処理での8255初期化を廃止
+;2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -104,6 +106,10 @@ STETC:
 		JP		Z,STMD
 		CP		'W'         ;FDW:MEMORY WRITE
 		JP		Z,STMW
+		CP		'Z'         ;FDZ:MZ-700 PATCH START
+		JP		Z,STMZ
+		CP		'U'         ;FDU:MZ-700 裏RAM START
+		JP		Z,STURA
 		JP		CMDERR
 
 ;**** 8255初期化 ****
@@ -247,13 +253,14 @@ SVER0:
 		POP		DE         ;CALL元STACKを破棄する
 SVERR:
 		CP		0F0H
-		JR		NZ,ERR2
+		JR		NZ,ERR3
 		LD		DE,MSG_F0  ;SD-CARD INITIALIZE ERROR
 		JR		ERRMSG
-ERR2:	CP		0F2H
-		JR		NZ,ERR3
-		LD		DE,MSG_F2  ;NOT OBJECT FILE
-		JR		ERRMSG
+;FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
+;ERR2:	CP		0F2H
+;		JR		NZ,ERR3
+;		LD		DE,MSG_F2  ;NOT OBJECT FILE
+;		JR		ERRMSG
 ERR3:	CP		0F1H
 		JR		NZ,ERR4
 		LD		DE,MSG_F1  ;NOT FIND FILE
@@ -686,6 +693,63 @@ STMW8:
 		JR		STMW
 STMW9:	JP		MON
 
+;**** MZ-700 PATCH START ****
+STMZ:	DI
+		LD		HL,0000H      ;ROMを2000Hにコピー
+		LD		DE,2000H
+		LD		BC,1000H
+		LDIR
+		OUT		(0E0H),A      ;裏RAM ON
+		LD		HL,2000H      ;裏RAMにROMの内容をコピー
+		LD		DE,0000H
+		LD		BC,1000H
+		LDIR
+		LD		HL,STMZ2      ;書き換えアドレス
+		LD		DE,STMZ3      ;書き換えデータ
+		LD		B,0FH
+STMZ1:	PUSH	BC
+		LD		C,(HL)
+		INC		HL
+		LD		B,(HL)
+		LD		A,(DE)
+		LD		(BC),A
+		POP		BC
+		INC		DE
+		INC		HL
+		DEC		B
+		JR		NZ,STMZ1
+		LD		HL,00ADH
+		LD		A,(HL)
+		CP		0CDH
+		JP		NZ,0000H         ;MZ-700と判断できなければ0000Hからスタート
+		LD		DE,MSG_ST
+		CALL	MSGPR
+		CALL	LETLN
+		JP		MONITOR_700      ;MZ-700と判断できれば00ADHからスタート
+
+STMZ2:	DW		0437H,0438H,0439H
+		DW		0476H,0477H,0478H
+		DW		04D9H,04DAH,04DBH
+		DW		04F9H,04FAH,04FBH
+		DW		0589H,058AH,058BH
+
+STMZ3:	DB		0C3H,04H,0F0H
+		DB		0C3H,07H,0F0H
+		DB		0C3H,0AH,0F0H
+		DB		0C3H,0DH,0F0H
+		DB		0C3H,010H,0F0H
+
+;**** MZ-700 裏RAM START ****
+STURA:	OUT		(0E0H),A      ;裏RAM ON
+		LD		HL,00ADH
+		LD		A,(HL)
+		CP		0CDH
+		JP		NZ,0000H         ;0CDHでなければNZ-700などと判断して0000Hからスタート
+		LD		DE,MSG_ST
+		CALL	MSGPR
+		CALL	LETLN
+		JP		MONITOR_700      ;(00ADH)が0CDHなら1Z-009A又は1Z-009Bのパッチ済みMONITORと判断して00ADHからスタート
+
 ;**** 1BYTE受信 ****
 ;受信DATAをAレジスタにセットしてリターン
 RCVBYTE:
@@ -800,6 +864,10 @@ MSG_AS:
 		DB		'ASTART FINISHED!'
 		DB		0DH
 		
+MSG_ST:
+		DB		'PATCHED MONITOR START!'
+		DB		0DH
+		
 MSG_AD:
 		DB		'ADDRESS FAILED!'
 		DB		0DH
@@ -820,9 +888,9 @@ MSG_F1:
 		DB		'NOT FIND FILE'
 		DB		0DH
 		
-MSG_F2:
-		DB		'NOT OBJECT FILE'
-		DB		0DH
+;MSG_F2:
+;		DB		'NOT OBJECT FILE'
+;		DB		0DH
 		
 MSG_F3:
 		DB		'FILE EXIST'
@@ -893,6 +961,7 @@ MSHED:
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
+		CALL	INIT
 		LD		A,91H      ;HEADER SAVEコマンド91H
 		CALL	MCMD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
@@ -901,13 +970,13 @@ MSHED:
 ;S-OS SWORD、8080用テキスト・エディタ＆アセンブラはファイルネームの後ろが20h詰めとなるため0dhに修正
 		LD		B,11H
 		LD		HL,FNAME+10H     ;ファイルネーム
-		LD		A,0DH
+		LD		A,0DH            ;17文字目には常に0DHをセットする
 		LD		(HL),A
 MSH0:	LD		A,(HL)
-		CP		0DH
+		CP		0DH              ;0DHであればひとつ前の文字の検査に移る
 		JR		Z,MSH1
-		CP		20H
-		JR		NZ,MSH2
+		CP		20H              ;20Hであれば0DHをセットしてひとつ前の文字の検査に移る
+		JR		NZ,MSH2          ;0DH、20H以外の文字であれば終了
 		LD		A,0DH
 		LD		(HL),A
 		
@@ -973,12 +1042,13 @@ MLHED:
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
+		CALL	INIT
 		LD		A,93H      ;HEADER LOADコマンド93H
 		CALL	MCMD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
 		JP		NZ,MERR
 
-		LD		B,08H
+		LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
 		LD		DE,LBUF
 		LD		A,0DH
 MLH0:	LD		(DE),A
@@ -1078,9 +1148,10 @@ MVRFY:	XOR		A          ;正常終了フラグ
 		RET
 
 ;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
-MCMD:	PUSH	AF
-		CALL	INIT
-		POP		AF
+MCMD:
+;		PUSH	AF
+;		CALL	INIT
+;		POP		AF
 		CALL	SNDBYTE    ;コマンドコード送信
 		CALL	RCVBYTE    ;状態取得(00H=OK)
 		RET
@@ -1096,14 +1167,14 @@ MRET:	POP		HL
 ;******* 代替処理用ERROR処理 **************
 MERR:
 		CP		0F0H
-		JR		NZ,MERR2
+		JR		NZ,MERR3
 		LD		DE,MSG_F0
 		JR		MERRMSG
-		
-MERR2:	CP		0F2H
-		JR		NZ,MERR3
-		LD		DE,MSG_F2
-		JR		MERRMSG
+;代替処理ではファイル種類コードの判別なし
+;MERR2:	CP		0F2H
+;		JR		NZ,MERR3
+;		LD		DE,MSG_F2
+;		JR		MERRMSG
 		
 MERR3:	CP		0F1H
 		JR		NZ,MERR99
