@@ -4,6 +4,7 @@
                       	;2022. 1.24 ファイルネームの後ろの20h詰めを0dhに修正するための処理をArduino側からMZ-80K側に修正
                       	;2022. 1.25 0475H MONITOR ライト データ代替処理、04F8H MONITOR リード データ代替処理での8255初期化を廃止
                       	;2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
+                      	;2022. 1.29 CMT代替処理RETURN時の割込み許可(EI)を削除
                       	;
   0003                	GETL		EQU		0003H
   0006                	LETLN		EQU		0006H
@@ -52,11 +53,11 @@
   F000  00            			NOP                   ;ROM識別コード
   F001  C313F0        			JP		START
                       	;******************** MONITOR CMTルーチン代替 *************************************
-  F004  C38FF7        			JP		MSHED
-  F007  C3DCF7        			JP		MSDAT
-  F00A  C30FF8        			JP		MLHED
-  F00D  C389F8        			JP		MLDAT
-  F010  C3BBF8        			JP		MVRFY
+  F004  C38FF7        	ENT1:	JP		MSHED
+  F007  C3DCF7        	ENT2:	JP		MSDAT
+  F00A  C30FF8        	ENT3:	JP		MLHED
+  F00D  C389F8        	ENT4:	JP		MLDAT
+  F010  C3BBF8        	ENT5:	JP		MVRFY
                       	
                       			
   F013  CD82F0        	START:	CALL	INIT
@@ -734,11 +735,16 @@
   F517  F904FA04FB04  			DW		04F9H,04FAH,04FBH
   F51D  89058A058B05  			DW		0589H,058AH,058BH
                       	
-  F523  C304F0        	STMZ3:	DB		0C3H,04H,0F0H
-  F526  C307F0        			DB		0C3H,07H,0F0H
-  F529  C30AF0        			DB		0C3H,0AH,0F0H
-  F52C  C30DF0        			DB		0C3H,0DH,0F0H
-  F52F  C310F0        			DB		0C3H,010H,0F0H
+  F523  C3            	STMZ3:	DB		0C3H
+  F524  04F0          			DW		ENT1
+  F526  C3            			DB		0C3H
+  F527  07F0          			DW		ENT2
+  F529  C3            			DB		0C3H
+  F52A  0AF0          			DW		ENT3
+  F52C  C3            			DB		0C3H
+  F52D  0DF0          			DW		ENT4
+  F52F  C3            			DB		0C3H
+  F530  10F0          			DW		ENT5
                       	
                       	;**** MZ-700 裏RAM START ****
   F532  D3E0          	STURA:	OUT		(0E0H),A      ;裏RAM ON
@@ -964,9 +970,9 @@
   F791  E5            			PUSH	HL
   F792  CD82F0        			CALL	INIT
   F795  3E91          			LD		A,91H      ;HEADER SAVEコマンド91H
-  F797  CDBEF8        			CALL	MCMD       ;コマンドコード送信
+  F797  CDBDF8        			CALL	MCMD       ;コマンドコード送信
   F79A  A7            			AND		A          ;00以外ならERROR
-  F79B  C2CBF8        			JP		NZ,MERR
+  F79B  C2C9F8        			JP		NZ,MERR
                       	
                       	;S-OS SWORD、8080用テキスト・エディタ＆アセンブラはファイルネームの後ろが20h詰めとなるため0dhに修正
   F79E  0611          			LD		B,11H
@@ -1001,9 +1007,9 @@
                       	
   F7D2  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F7D5  A7            			AND		A          ;00以外ならERROR
-  F7D6  C2CBF8        			JP		NZ,MERR
+  F7D6  C2C9F8        			JP		NZ,MERR
                       	
-  F7D9  C3C5F8        			JP		MRET       ;正常RETURN
+  F7D9  C3C4F8        			JP		MRET       ;正常RETURN
                       	
                       	;******************** 0475H MONITOR ライト データ代替処理 **********************
   F7DC                	MSDAT:
@@ -1011,9 +1017,9 @@
   F7DD  C5            			PUSH	BC
   F7DE  E5            			PUSH	HL
   F7DF  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
-  F7E1  CDBEF8        			CALL	MCMD       ;コマンドコード送信
+  F7E1  CDBDF8        			CALL	MCMD       ;コマンドコード送信
   F7E4  A7            			AND		A          ;00以外ならERROR
-  F7E5  C2CBF8        			JP		NZ,MERR
+  F7E5  C2C9F8        			JP		NZ,MERR
                       	
   F7E8  210211        			LD		HL,FSIZE   ;FSIZE送信
   F7EB  7E            			LD		A,(HL)
@@ -1024,7 +1030,7 @@
                       	
   F7F4  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F7F7  A7            			AND		A          ;00以外ならERROR
-  F7F8  C2CBF8        			JP		NZ,MERR
+  F7F8  C2C9F8        			JP		NZ,MERR
                       	
   F7FB  ED5B0211      			LD		DE,(FSIZE)
   F7FF  2A0411        			LD		HL,(SADRS)
@@ -1036,7 +1042,7 @@
   F809  23            			INC		HL
   F80A  20F6          			JR		NZ,MSD1
                       			
-  F80C  C3C5F8        			JP		MRET       ;正常RETURN
+  F80C  C3C4F8        			JP		MRET       ;正常RETURN
                       	
                       	;************************** 04D8H MONITOR リード インフォメーション代替処理 *****************
   F80F                	MLHED:
@@ -1045,9 +1051,9 @@
   F811  E5            			PUSH	HL
   F812  CD82F0        			CALL	INIT
   F815  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
-  F817  CDBEF8        			CALL	MCMD       ;コマンドコード送信
+  F817  CDBDF8        			CALL	MCMD       ;コマンドコード送信
   F81A  A7            			AND		A          ;00以外ならERROR
-  F81B  C2CBF8        			JP		NZ,MERR
+  F81B  C2C9F8        			JP		NZ,MERR
                       	
   F81E  0608          			LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
   F820  11A311        			LD		DE,LBUF
@@ -1091,11 +1097,11 @@
                       			
   F865  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F868  A7            			AND		A          ;00以外ならERROR
-  F869  C2CBF8        			JP		NZ,MERR
+  F869  C2C9F8        			JP		NZ,MERR
                       	
   F86C  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F86F  A7            			AND		A          ;00以外ならERROR
-  F870  C2CBF8        			JP		NZ,MERR
+  F870  C2C9F8        			JP		NZ,MERR
                       	
   F873  21F010        			LD		HL,IBUFE
   F876  0680          			LD		B,80H
@@ -1107,9 +1113,9 @@
                       	
   F880  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F883  A7            			AND		A          ;00以外ならERROR
-  F884  C2CBF8        			JP		NZ,MERR
+  F884  C2C9F8        			JP		NZ,MERR
                       	
-  F887  183C          			JR		MRET       ;正常RETURN
+  F887  183B          			JR		MRET       ;正常RETURN
                       	
                       	;**************************** 04F8H MONITOR リード データ代替処理 ********************
   F889                	MLDAT:
@@ -1117,17 +1123,17 @@
   F88A  C5            			PUSH	BC
   F88B  E5            			PUSH	HL
   F88C  3E94          			LD		A,94H      ;DATA LOADコマンド94H
-  F88E  CDBEF8        			CALL	MCMD       ;コマンドコード送信
+  F88E  CDBDF8        			CALL	MCMD       ;コマンドコード送信
   F891  A7            			AND		A          ;00以外ならERROR
-  F892  C2CBF8        			JP		NZ,MERR
+  F892  C2C9F8        			JP		NZ,MERR
                       	
   F895  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F898  A7            			AND		A          ;00以外ならERROR
-  F899  C2CBF8        			JP		NZ,MERR
+  F899  C2C9F8        			JP		NZ,MERR
                       	
   F89C  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F89F  A7            			AND		A          ;00以外ならERROR
-  F8A0  C2CBF8        			JP		NZ,MERR
+  F8A0  C2C9F8        			JP		NZ,MERR
                       	
   F8A3  110211        			LD		DE,FSIZE   ;FSIZE送信
   F8A6  1A            			LD		A,(DE)
@@ -1139,62 +1145,62 @@
                       	
   F8B2  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F8B5  A7            			AND		A          ;00以外ならERROR
-  F8B6  C2CBF8        			JP		NZ,MERR
+  F8B6  C2C9F8        			JP		NZ,MERR
                       	
-  F8B9  180A          			JR		MRET       ;正常RETURN
+  F8B9  1809          			JR		MRET       ;正常RETURN
                       	
                       	;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
   F8BB  AF            	MVRFY:	XOR		A          ;正常終了フラグ
-  F8BC  FB            			EI
-  F8BD  C9            			RET
+                      	;		EI
+  F8BC  C9            			RET
                       	
                       	;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
-  F8BE                	MCMD:
+  F8BD                	MCMD:
                       	;		PUSH	AF
                       	;		CALL	INIT
                       	;		POP		AF
-  F8BE  CD5CF5        			CALL	SNDBYTE    ;コマンドコード送信
-  F8C1  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F8C4  C9            			RET
+  F8BD  CD5CF5        			CALL	SNDBYTE    ;コマンドコード送信
+  F8C0  CD49F5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F8C3  C9            			RET
                       	
                       	;****** 代替処理用正常RETURN処理 **********
-  F8C5  E1            	MRET:	POP		HL
-  F8C6  C1            			POP		BC
-  F8C7  D1            			POP		DE
-  F8C8  AF            			XOR		A          ;正常終了フラグ
-  F8C9  FB            			EI
-  F8CA  C9            			RET
+  F8C4  E1            	MRET:	POP		HL
+  F8C5  C1            			POP		BC
+  F8C6  D1            			POP		DE
+  F8C7  AF            			XOR		A          ;正常終了フラグ
+                      	;		EI
+  F8C8  C9            			RET
                       	
                       	;******* 代替処理用ERROR処理 **************
-  F8CB                	MERR:
-  F8CB  FEF0          			CP		0F0H
-  F8CD  2005          			JR		NZ,MERR3
-  F8CF  1145F6        			LD		DE,MSG_F0
-  F8D2  180F          			JR		MERRMSG
+  F8C9                	MERR:
+  F8C9  FEF0          			CP		0F0H
+  F8CB  2005          			JR		NZ,MERR3
+  F8CD  1145F6        			LD		DE,MSG_F0
+  F8D0  180F          			JR		MERRMSG
                       	;代替処理ではファイル種類コードの判別なし
                       	;MERR2:	CP		0F2H
                       	;		JR		NZ,MERR3
                       	;		LD		DE,MSG_F2
                       	;		JR		MERRMSG
                       			
-  F8D4  FEF1          	MERR3:	CP		0F1H
-  F8D6  2005          			JR		NZ,MERR99
-  F8D8  115EF6        			LD		DE,MSG_F1
-  F8DB  1806          			JR		MERRMSG
+  F8D2  FEF1          	MERR3:	CP		0F1H
+  F8D4  2005          			JR		NZ,MERR99
+  F8D6  115EF6        			LD		DE,MSG_F1
+  F8D9  1806          			JR		MERRMSG
                       			
-  F8DD  CDC303        	MERR99:	CALL	PRTBYT
-  F8E0  117EF7        			LD		DE,MSG99
+  F8DB  CDC303        	MERR99:	CALL	PRTBYT
+  F8DE  117EF7        			LD		DE,MSG99
                       			
-  F8E3                	MERRMSG:
-  F8E3  CD1500        			CALL	MSGPR
-  F8E6  CD0600        			CALL	LETLN
-  F8E9  E1            			POP		HL
-  F8EA  C1            			POP		BC
-  F8EB  D1            			POP		DE
-  F8EC  3E02          			LD		A,02H
-  F8EE  37            			SCF
-  F8EF  FB            			EI
-  F8F0  C9            			RET
+  F8E1                	MERRMSG:
+  F8E1  CD1500        			CALL	MSGPR
+  F8E4  CD0600        			CALL	LETLN
+  F8E7  E1            			POP		HL
+  F8E8  C1            			POP		BC
+  F8E9  D1            			POP		DE
+  F8EA  3E02          			LD		A,02H
+  F8EC  37            			SCF
+                      	;		EI
+  F8ED  C9            			RET
                       	
-  F8F1                			END
+  F8EE                			END
 

@@ -2,6 +2,7 @@
 //           比較演算子の記述を見直し
 // 2022. 1.25 各コマンド受信時のdelay()を廃止
 // 2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
+// 2022. 1.29 FDPコマンドのbug修正
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -522,14 +523,18 @@ unsigned int br_chk =0;
           if (br_chk==0xff){
             lp1 = f_length; 
           }
-//B:BACKを受信したらポインタを256Byte戻す。先頭画面なら128Byte戻してもう一度先頭画面表示
+//B:BACKを受信したらポインタを256Byte戻す。先頭画面なら0に戻してもう一度先頭画面表示
           if (br_chk==0x42){
             if(lp1>255){
-              lp1 = lp1 - 256;
-              file.seek(file.position()-256);
+              if (lp1 % 128 == 0){
+                lp1 = lp1 - 256;
+              } else {
+                lp1 = lp1 - 128 - (lp1 % 128);
+              }
+              file.seek(lp1);
             } else{
-              lp1 = lp1 - 128;
-              file.seek(file.position()-128);
+              lp1 = 0;
+              file.seek(0);
             }
           }
         }

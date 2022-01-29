@@ -3,6 +3,7 @@
 ;2022. 1.24 ファイルネームの後ろの20h詰めを0dhに修正するための処理をArduino側からMZ-80K側に修正
 ;2022. 1.25 0475H MONITOR ライト データ代替処理、04F8H MONITOR リード データ代替処理での8255初期化を廃止
 ;2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
+;2022. 1.29 CMT代替処理RETURN時の割込み許可(EI)を削除
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -51,11 +52,11 @@ MONITOR_700	EQU		00ADH
 		NOP                   ;ROM識別コード
 		JP		START
 ;******************** MONITOR CMTルーチン代替 *************************************
-		JP		MSHED
-		JP		MSDAT
-		JP		MLHED
-		JP		MLDAT
-		JP		MVRFY
+ENT1:	JP		MSHED
+ENT2:	JP		MSDAT
+ENT3:	JP		MLHED
+ENT4:	JP		MLDAT
+ENT5:	JP		MVRFY
 
 		
 START:	CALL	INIT
@@ -733,11 +734,16 @@ STMZ2:	DW		0437H,0438H,0439H
 		DW		04F9H,04FAH,04FBH
 		DW		0589H,058AH,058BH
 
-STMZ3:	DB		0C3H,04H,0F0H
-		DB		0C3H,07H,0F0H
-		DB		0C3H,0AH,0F0H
-		DB		0C3H,0DH,0F0H
-		DB		0C3H,010H,0F0H
+STMZ3:	DB		0C3H
+		DW		ENT1
+		DB		0C3H
+		DW		ENT2
+		DB		0C3H
+		DW		ENT3
+		DB		0C3H
+		DW		ENT4
+		DB		0C3H
+		DW		ENT5
 
 ;**** MZ-700 裏RAM START ****
 STURA:	OUT		(0E0H),A      ;裏RAM ON
@@ -1144,7 +1150,7 @@ MLDAT:
 
 ;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
 MVRFY:	XOR		A          ;正常終了フラグ
-		EI
+;		EI
 		RET
 
 ;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
@@ -1161,7 +1167,7 @@ MRET:	POP		HL
 		POP		BC
 		POP		DE
 		XOR		A          ;正常終了フラグ
-		EI
+;		EI
 		RET
 
 ;******* 代替処理用ERROR処理 **************
@@ -1192,7 +1198,7 @@ MERRMSG:
 		POP		DE
 		LD		A,02H
 		SCF
-		EI
+;		EI
 		RET
 
 		END
