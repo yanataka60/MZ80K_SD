@@ -3,6 +3,7 @@
 // 2022. 1.25 各コマンド受信時のdelay()を廃止
 // 2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
 // 2022. 1.29 FDPコマンドのbug修正
+// 2022. 1.30 FDLコマンド仕様変更 FDL A～Zの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -361,11 +362,20 @@ char w_name[]="0000.mzt";
 void dirlist(void){
 //  char f_name[40];
 //パラメータ取得
-  int pg = rcv1byte()-0x30;
+//  int pg = rcv1byte()-0x30;
+  char pg0 = rcv1byte();
+  int pg = 0;
+  if ( pg0 < 0x3a){
+    pg = pg0 - 0x30;
+  }
+// 旧FLDコマンドの名残り対応。FD_rom1.sの修正があったときに合わせて再修正
+  pg0 = pg0 + 0x07;
+//
   File file = SD.open( "/" );
   File entry =  file.openNextFile();
 //パラメータ 0:全件 1～9:当該ページのみ(1ページ20件)
-  if ( pg > 0){
+//  if ( pg > 0 ){
+  if ( pg > 0 && pg < 10 ){
     int lp2 = 1;
     while (lp2 < (pg-1)*20+1){
       entry =  file.openNextFile();
@@ -380,13 +390,27 @@ void dirlist(void){
     entry.getName(f_name,36);
     unsigned int lp1=0;
 //一件送信
-    while (lp1<=36 && f_name[lp1]!=0x00){
-      snd1byte(upper(f_name[lp1]));
-      lp1++;
-    }
-    snd1byte(0x0D);
-    snd1byte(0x00);
-    if (pg > 0){cnt1++;}else{cntl2++;}
+    if (pg0 < 0x41){
+//旧FDL処理、FDLのみ又はFDL 1～9
+      while (lp1<=36 && f_name[lp1]!=0x00){
+        snd1byte(upper(f_name[lp1]));
+        lp1++;
+        }
+        snd1byte(0x0D);
+        snd1byte(0x00);
+        if (pg > 0){cnt1++;}else{cntl2++;}
+     } else {
+//新FDL処理、FDL A～Zの場合先頭一文字を比較して一致したものだけを出力
+       if (f_name[0] == pg0){
+         while (lp1<=36 && f_name[lp1]!=0x00){
+         snd1byte(upper(f_name[lp1]));
+         lp1++;
+         }
+         snd1byte(0x0D);
+         snd1byte(0x00);
+         cntl2++;
+       }
+     }
     if (cntl2 > 19){
 //継続・打ち切り選択指示要求
       snd1byte(0xfe);
