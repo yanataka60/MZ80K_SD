@@ -4,6 +4,9 @@
 ;2022. 1.25 0475H MONITOR ライト データ代替処理、04F8H MONITOR リード データ代替処理での8255初期化を廃止
 ;2022. 1.26 FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
 ;2022. 1.29 CMT代替処理RETURN時の割込み許可(EI)を削除
+;2022. 1.31 FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+;2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
+;           Bキーで前の20件を表示
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -12,6 +15,7 @@ PRNTS		EQU		000CH
 MSGPR		EQU		0015H
 PLIST		EQU		0018H
 GETKEY		EQU		001BH
+TIMST		EQU		0033H
 PRTWRD		EQU		03BAH
 PRTBYT		EQU		03C3H
 HLHEX		EQU		0410H
@@ -132,6 +136,11 @@ SDLOAD:	LD		A,81H  ;LOADコマンド81H
 		LD		A,(LBUF+3)
 		CP		'/'        ;'*FD/'であれば実行アドレスに飛ばずにMONITORコマンド待ちに戻る
 		JP		Z,MON
+; FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+		LD		A,00H
+		LD		DE,0000H
+		CALL	TIMST
+		
 		LD		HL,(EXEAD)
 		JP		(HL)
 
@@ -357,20 +366,21 @@ STLT:	INC		DE
 		LD		A,(DE)
 		CP		0DH
 		JR		NZ,STLT1
-		LD		A,30H
-		JR		DIRLIST    ;FDLだけなら'30H'を送信(全ファイルを表示)
+;		LD		A,30H
+		LD		A,20H
+		JR		DIRLIST    ;FDLだけなら'20H'を送信(全ファイルを表示)
 STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
 		LD		A,(DE)
-		CP		30H
-		JP		C,CMDERR
-		CP		3AH
-		JR		NC,STLT2
-		JR		DIRLIST
-STLT2:	CP		41H        ;念のためA～Zにも対応
-		JP		C,CMDERR
-		CP		5BH
-		JP		NC,CMDERR
-		SUB		07H
+;		CP		30H
+;		JP		C,CMDERR
+;		CP		3AH
+;		JR		NC,STLT2
+;		JR		DIRLIST
+;STLT2:	CP		41H        ;念のためA～Zにも対応
+;		JP		C,CMDERR
+;		CP		5BH
+;		JP		NC,CMDERR
+;		SUB		07H
 DIRLIST:
 		PUSH	AF
 		LD		A,83H      ;DIRLISTコマンド83Hを送信
@@ -417,8 +427,9 @@ DL6:	CALL	GETKEY            ;1文字入力待ち
 		JR		Z,DL7
 		CP		12H               ;カーソル↑で打ち切り
 		JR		Z,DL9
-		CALL	LETLN             ;それ以外で継続
-		LD		A,00H
+		CP		42H               ;「B」で前ページ
+		JR		Z,DL8
+		LD		A,00H             ;それ以外で継続
 		JR		DL8
 DL9:	LD		A,0C2H            ;カーソル↑で打ち切ったときにカーソル2行上へ
 		CALL	DPCT
@@ -426,6 +437,7 @@ DL9:	LD		A,0C2H            ;カーソル↑で打ち切ったときにカーソル2行上へ
 		CALL	DPCT
 DL7:	LD		A,0FFH            ;0FFH中断コードを送信
 DL8:	CALL	SNDBYTE
+		CALL	LETLN
 		JR		DL2
 
 ;**** FILE DELETE ****
@@ -903,10 +915,10 @@ MSG_F3:
 		DB		0DH
 		
 MSG_KEY1:
-		DB		'HIT ANY KEY(BREAK:'
+		DB		'NEXT:ANY BACK:B BREAK:'
 		DB		0DH
 MSG_KEY2:
-		DB		' OR SHIFT+BREAK)'
+		DB		' OR SHIFT+BREAK'
 		DB		0DH
 		
 MSG_DELQ:
@@ -1151,6 +1163,7 @@ MLDAT:
 ;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
 MVRFY:	XOR		A          ;正常終了フラグ
 ;		EI
+
 		RET
 
 ;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
@@ -1168,6 +1181,7 @@ MRET:	POP		HL
 		POP		DE
 		XOR		A          ;正常終了フラグ
 ;		EI
+		
 		RET
 
 ;******* 代替処理用ERROR処理 **************
@@ -1199,6 +1213,7 @@ MERRMSG:
 		LD		A,02H
 		SCF
 ;		EI
+
 		RET
 
 		END
