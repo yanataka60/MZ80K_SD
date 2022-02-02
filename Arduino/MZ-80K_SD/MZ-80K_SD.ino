@@ -6,6 +6,7 @@
 // 2022. 1.30 FDLコマンド仕様変更 FDL A～Zの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 // 2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 //            Bキーで前の20件を表示
+// 2022. 2. 2 DOSファイル名がアルファベット小文字でもFDL xで検索できるように修正
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -103,15 +104,6 @@ byte rcv1byte(void){
   return(i_data);
 }
 
-//1BIT送信
-//void snd1bit(int i,byte j_data){
-//  if(j_data==1){
-//    digitalWrite(i,HIGH);
-//   }else{
-//    digitalWrite(i,LOW);
-//  }
-//}
-
 //1BYTE送信
 void snd1byte(byte i_data){
 //下位ビットから8ビット分をセット
@@ -123,14 +115,6 @@ void snd1byte(byte i_data){
   digitalWrite(PB5PIN,(i_data>>5)&0x01);
   digitalWrite(PB6PIN,(i_data>>6)&0x01);
   digitalWrite(PB7PIN,(i_data>>7)&0x01);
-//  snd1bit(PB0PIN,(i_data)&0x01);
-//  snd1bit(PB1PIN,(i_data>>1)&0x01);
-//  snd1bit(PB2PIN,(i_data>>2)&0x01);
-//  snd1bit(PB3PIN,(i_data>>3)&0x01);
-//  snd1bit(PB4PIN,(i_data>>4)&0x01);
-//  snd1bit(PB5PIN,(i_data>>5)&0x01);
-//  snd1bit(PB6PIN,(i_data>>6)&0x01);
-//  snd1bit(PB7PIN,(i_data>>7)&0x01);
   digitalWrite(FLGPIN,HIGH);
 //HIGHになるまでループ
   while(digitalRead(CHKPIN) != HIGH){
@@ -172,9 +156,7 @@ void addmzt(char *f_name){
 
 //SDカードにSAVE
 void f_save(void){
-//char f_name[40];
 char p_name[20];
-//byte s_data[260];
 
 //保存ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -253,7 +235,6 @@ char p_name[20];
 
 //SDカードから読込
 void f_load(void){
-//char f_name[40];
 //ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
     f_name[lp1] = rcv1byte();
@@ -315,9 +296,7 @@ void f_load(void){
 
 //ASTART 指定されたファイルをファイル名「0000.mzt」としてコピー
 void astart(void){
-//char f_name[40];
 char w_name[]="0000.mzt";
-//byte s_data[256];
 
 //ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -362,7 +341,6 @@ char w_name[]="0000.mzt";
 
 // SD-CARDのFILELIST
 void dirlist(void){
-//  char f_name[40];
 //パラメータ取得
   char pg0 = rcv1byte();
 //
@@ -377,7 +355,7 @@ void dirlist(void){
       entry.getName(f_name,36);
       unsigned int lp1=0;
 //一件送信
-      if (f_name[0] == pg0 || pg0 == 0x20){
+      if (upper(f_name[0]) == pg0 || pg0 == 0x20){
         while (lp1<=36 && f_name[lp1]!=0x00){
         snd1byte(upper(f_name[lp1]));
         lp1++;
@@ -410,7 +388,7 @@ void dirlist(void){
           cntl2=0;
           while(cntl2 < page*20){
             entry =  file.openNextFile();
-            if (f_name[0] == pg0 || pg0 == 0x20){
+            if (upper(f_name[0]) == pg0 || pg0 == 0x20){
               cntl2++;
             }
           }
@@ -438,7 +416,6 @@ void dirlist(void){
 
 //FILE DELETE
 void f_del(void){
-//char f_name[40];
 
 //ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -472,8 +449,6 @@ void f_del(void){
 
 //FILE RENAME
 void f_ren(void){
-//char f_name[40];
-//char new_name[40];
 
 //現ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -516,7 +491,6 @@ void f_ren(void){
 
 //FILE DUMP
 void f_dump(void){
-//char f_name[40];
 unsigned int br_chk =0;
 
 //ファイルネーム取得
@@ -593,9 +567,6 @@ unsigned int br_chk =0;
 
 //FILE COPY
 void f_copy(void){
-//char f_name[40];
-//char new_name[40];
-//byte s_data[256];
 
 //現ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -694,7 +665,6 @@ char m_info[130];
 
 //92hで0475H MONITOR ライト データ代替処理
 void mon_wdata(void){
-//byte s_data[260];
 //ファイルサイズ取得
   int f_length1 = rcv1byte();
   int f_length2 = rcv1byte();
@@ -806,8 +776,6 @@ void loop()
 //80hでSDカードにsave
       case 0x80:
 ////  Serial.println("SAVE START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_save();
@@ -815,8 +783,6 @@ void loop()
 //81hでSDカードからload
       case 0x81:
 ////  Serial.println("LOAD START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_load();
@@ -824,8 +790,6 @@ void loop()
 //82hで指定ファイルを0000.mztとしてリネームコピー
       case 0x82:
 ////  Serial.println("ASTART START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         astart();
@@ -833,8 +797,6 @@ void loop()
 //83hでファイルリスト出力
       case 0x83:
 ////  Serial.println("FILE LIST START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         dirlist();
@@ -842,8 +804,6 @@ void loop()
 //84hでファイルDelete
       case 0x84:
 ////  Serial.println("FILE Delete START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_del();
@@ -851,8 +811,6 @@ void loop()
 //85hでファイルリネーム
       case 0x85:
 ////  Serial.println("FILE Rename START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_ren();
@@ -860,8 +818,6 @@ void loop()
       case 0x86:  
 //86hでファイルダンプ
 ////  Serial.println("FILE Dump START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_dump();
@@ -869,8 +825,6 @@ void loop()
       case 0x87:  
 //87hでファイルコピー
 ////  Serial.println("FILE Copy START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         f_copy();
@@ -878,8 +832,6 @@ void loop()
       case 0x91:
 //91hで0436H MONITOR ライト インフォメーション代替処理
 ////  Serial.println("0436H START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_whead();
@@ -887,8 +839,6 @@ void loop()
 //92hで0475H MONITOR ライト データ代替処理
       case 0x92:
 ////  Serial.println("0475H START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_wdata();
@@ -896,8 +846,6 @@ void loop()
 //93hで04D8H MONITOR リード インフォメーション代替処理
       case 0x93:
 ////  Serial.println("04D8H START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_lhead();
@@ -905,8 +853,6 @@ void loop()
 //94hで04F8H MONITOR リード データ代替処理
       case 0x94:
 ////  Serial.println("04F8H START");
-//ちょっとだけWait
-//        delay(10);
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_ldata();
