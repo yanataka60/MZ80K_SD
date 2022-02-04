@@ -7,6 +7,7 @@
 // 2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 //            Bキーで前の20件を表示
 // 2022. 2. 2 DOSファイル名がアルファベット小文字でもFDL xで検索できるように修正
+// 2022. 2. 4 MZ-1200対策　初期化時にdelay(1000)を追加
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -66,6 +67,9 @@ void setup(){
   digitalWrite(PB6PIN,LOW);
   digitalWrite(PB7PIN,LOW);
   digitalWrite(FLGPIN,LOW);
+
+// 2022. 2. 4 MZ-1200対策
+  delay(1000);
 
   // SD初期化
   if( !SD.begin(CABLESELECTPIN,8) )
