@@ -56,7 +56,7 @@
 　　　注2)秋月電子通商　AE-microSD-LLCNVのJ1ジャンパはショートしてください。
 
 ## ROMプログラムについて
-　FD_rom1.bin、FD_rom2.bin、FD_rom.binと3つありますが、SD-CARDを利用するためのプログラムFD_rom1.bin(28C64の下位に配置)、MONITORをCMT利用に戻すためのプログラムFD_rom2.bin(28C64の上位に配置)、2つを合わせたプログラムFD_rom.binとなっています。
+　Z80フォルダ内にFD_rom1.bin、FD_rom2.bin、FD_rom.binと3つありますが、SD-CARDを利用するためのプログラムFD_rom1.bin(28C64の下位に配置)、MONITORをCMT利用に戻すためのプログラムFD_rom2.bin(28C64の上位に配置)、2つを合わせたプログラムFD_rom.binとなっています。
 
 　ROMライター(TL866II Plus等)を使って2764又は28C64にFD_rom.binを書き込んでください。
 
