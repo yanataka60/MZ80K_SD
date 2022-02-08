@@ -8,6 +8,7 @@
 //            Bキーで前の20件を表示
 // 2022. 2. 2 DOSファイル名がアルファベット小文字でもFDL xで検索できるように修正
 // 2022. 2. 4 MZ-1200対策　初期化時にdelay(1000)を追加
+// 2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -16,6 +17,7 @@ unsigned long m_lop=128;
 char m_name[40];
 byte s_data[260];
 char f_name[40];
+char c_name[40];
 char new_name[40];
 
 #define CABLESELECTPIN  (10)
@@ -345,8 +347,12 @@ char w_name[]="0000.mzt";
 
 // SD-CARDのFILELIST
 void dirlist(void){
-//パラメータ取得
-  char pg0 = rcv1byte();
+//比較文字列取得 32+1文字まで
+  for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
+    c_name[lp1] = rcv1byte();
+//  Serial.print(c_name[lp1],HEX);
+//  Serial.println("");
+  }
 //
   File file = SD.open( "/" );
   File entry =  file.openNextFile();
@@ -359,7 +365,8 @@ void dirlist(void){
       entry.getName(f_name,36);
       unsigned int lp1=0;
 //一件送信
-      if (upper(f_name[0]) == pg0 || pg0 == 0x20){
+//比較文字列でファイルネームを先頭10文字まで比較して一致するものだけを出力
+      if (f_match(f_name,c_name)){
         while (lp1<=36 && f_name[lp1]!=0x00){
         snd1byte(upper(f_name[lp1]));
         lp1++;
@@ -392,7 +399,8 @@ void dirlist(void){
           cntl2=0;
           while(cntl2 < page*20){
             entry =  file.openNextFile();
-            if (upper(f_name[0]) == pg0 || pg0 == 0x20){
+//          if (upper(f_name[0]) == pg0 || pg0 == 0x20){
+            if (f_match(f_name,c_name)){
               cntl2++;
             }
           }
@@ -416,6 +424,36 @@ void dirlist(void){
 //処理終了指示
   snd1byte(0xFF);
   snd1byte(0x00);
+}
+
+//f_nameとc_nameをc_nameに0x00が出るまで比較
+//FILENAME COMPARE
+boolean f_match(char *f_name,char *c_name){
+  boolean flg1 = true;
+  unsigned int lp1 = 0;
+//  Serial.print(f_name);
+//  Serial.print(" ");
+//  Serial.print(c_name);
+//  Serial.print(" ");
+  while (lp1 <=32 && c_name[0] != 0x00 && flg1 == true){
+//  Serial.print(f_name[lp1],HEX);
+//  Serial.print("-");
+//  Serial.print(c_name[lp1+1],HEX);
+//  Serial.print(" ");
+    if (upper(f_name[lp1]) != c_name[lp1+1]){
+      flg1 = false;
+    }
+    lp1++;
+    if (c_name[lp1+1]==0x00){
+      break;
+    }
+  }
+//  if (flg1){
+//    Serial.println("true");
+//  }else{
+//    Serial.println("false");
+//  }
+  return flg1;
 }
 
 //FILE DELETE
