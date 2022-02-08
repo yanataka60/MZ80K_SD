@@ -428,6 +428,8 @@ NEW NAME:TEST2[CR]
 ## MZ700用プログラムで起動確認したもの
 　　S-BASIC 1Z-007B(LOAD、SAVEもSD対応となるパッチを公開しました)
 
+　　S-OS SWORD(MZ-700用SWORDでSD-CARD運用するにはMONITOR-ROMの書き換えが必要です。MONITOR-ROMを書き換えずに「FT.MZT」又はFDZコマンドを実行しても起動後のLOAD、SAVEはCMTとなります)
+
 　　HUBASIC VERSION 2.0A(起動後のLOAD、SAVEはCMT)
 
 　　tiny XEVIOUS mz-700
