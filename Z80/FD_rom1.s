@@ -7,6 +7,7 @@
 ;2022. 1.31 FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
 ;2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 ;           Bキーで前の20件を表示
+;2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -363,32 +364,30 @@ STAS:	LD		A,82H      ;AUTO START SETコマンド82H
 
 ;**** DIRLIST ****
 STLT:	INC		DE
-		LD		A,(DE)
-		CP		0DH
-		JR		NZ,STLT1
+;		LD		A,(DE)
+;		CP		0DH
+;		JR		NZ,STLT1
 ;		LD		A,30H
-		LD		A,20H
-		JR		DIRLIST    ;FDLだけなら'20H'を送信(全ファイルを表示)
-STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
-		LD		A,(DE)
-;		CP		30H
-;		JP		C,CMDERR
-;		CP		3AH
-;		JR		NC,STLT2
-;		JR		DIRLIST
-;STLT2:	CP		41H        ;念のためA～Zにも対応
-;		JP		C,CMDERR
-;		CP		5BH
-;		JP		NC,CMDERR
-;		SUB		07H
+;		LD		A,20H
+;		JR		DIRLIST    ;FDLだけなら'20H'を送信(全ファイルを表示)
+;STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
+;		LD		A,(DE)
 DIRLIST:
-		PUSH	AF
+;		PUSH	AF
 		LD		A,83H      ;DIRLISTコマンド83Hを送信
 		CALL	STCD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
 		JP		NZ,SVERR
-		POP		AF
-		CALL	SNDBYTE           ;ページ指示を送信
+;		POP		AF
+		LD		B,21H
+STLT1:	LD		A,(DE)
+		CP		0DH
+		JR		NZ,STLT2
+		LD		A,00H
+STLT2:	CALL	SNDBYTE           ;ページ指示を送信
+		INC		DE
+		DEC		B
+		JR		NZ,STLT1
 DL1:	LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
 		LD		DE,LBUF
 		LD		BC,DEND-DEFDIR
@@ -518,8 +517,8 @@ STPR0:	PUSH	BC
 		LD		HL,LBUF
 STPR1:	CALL	RCVBYTE
 		LD		(HL),A
-		DEC		B
 		INC		HL
+		DEC		B
 		JR		NZ,STPR1
 
 		LD		HL,(SADRS) ;アドレス表示
@@ -998,8 +997,8 @@ MSH0:	LD		A,(HL)
 		LD		A,0DH
 		LD		(HL),A
 		
-MSH1:	DEC		B
-		DEC		HL
+MSH1:	DEC		HL
+		DEC		B
 		JR		NZ,MSH0
 
 MSH2:	CALL	LETLN
@@ -1061,6 +1060,11 @@ MLHED:
 		PUSH	BC
 		PUSH	HL
 		CALL	INIT
+
+		LD		A,00H
+		LD		DE,0000H
+		CALL	TIMST
+
 		LD		A,93H      ;HEADER LOADコマンド93H
 		CALL	MCMD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
