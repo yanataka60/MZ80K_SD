@@ -9,6 +9,8 @@
                       	;2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
                       	;           Bキーで前の20件を表示
                       	;2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
+                      	;2022. 2.10 04D8H MONITOR リード インフォメーション代替処理の中からFDLコマンドを使えるように修正
+                      	;           FDLコマンド処理をサブルーチン化
                       	;
   0003                	GETL		EQU		0003H
   0006                	LETLN		EQU		0006H
@@ -18,6 +20,7 @@
   0018                	PLIST		EQU		0018H
   001B                	GETKEY		EQU		001BH
   0033                	TIMST		EQU		0033H
+  0180                	CMPSTR		EQU		0180H
   03BA                	PRTWRD		EQU		03BAH
   03C3                	PRTBYT		EQU		03C3H
   0410                	HLHEX		EQU		0410H
@@ -58,11 +61,11 @@
   F000  00            			NOP                   ;ROM識別コード
   F001  C313F0        			JP		START
                       	;******************** MONITOR CMTルーチン代替 *************************************
-  F004  C387F7        	ENT1:	JP		MSHED
-  F007  C3D4F7        	ENT2:	JP		MSDAT
-  F00A  C307F8        	ENT3:	JP		MLHED
-  F00D  C389F8        	ENT4:	JP		MLDAT
-  F010  C3BBF8        	ENT5:	JP		MVRFY
+  F004  C395F7        	ENT1:	JP		MSHED
+  F007  C3E2F7        	ENT2:	JP		MSDAT
+  F00A  C315F8        	ENT3:	JP		MLHED
+  F00D  C3EDF8        	ENT4:	JP		MLDAT
+  F010  C31FF9        	ENT5:	JP		MVRFY
                       	
                       			
   F013  CD82F0        	START:	CALL	INIT
@@ -88,7 +91,7 @@
   F037  FE0D          			CP		0DH         ;FDだけで改行の場合にはDEFNAMEの文字列をファイルネームとしてロード
   F039  200D          			JR		NZ,STETC    ;該当なしなら他コマンドをチェック
   F03B  D5            	STT3:	PUSH	DE          ;設定ファイル名(0000.mzt)を転送
-  F03C  217DF7        			LD		HL,DEFNAME
+  F03C  218BF7        			LD		HL,DEFNAME
   F03F  13            			INC		DE
   F040  010500        			LD		BC,NEND-DEFNAME
   F043  EDB0          			LDIR
@@ -102,21 +105,21 @@
   F052  FE4C          			CP		'L'         ;FDL:ファイル一覧表示
   F054  CA1DF2        			JP		Z,STLT
   F057  FE44          			CP		'D'         ;FDD:DELETE
-  F059  CAAAF2        			JP		Z,STDE
+  F059  CAB8F2        			JP		Z,STDE
   F05C  FE52          			CP		'R'         ;FDR:RENAME
-  F05E  CAE7F2        			JP		Z,STRN
+  F05E  CAF5F2        			JP		Z,STRN
   F061  FE50          			CP		'P'         ;FDP:DUMP
-  F063  CA14F3        			JP		Z,STPR
+  F063  CA22F3        			JP		Z,STPR
   F066  FE43          			CP		'C'         ;FDC:COPY
-  F068  CAB9F3        			JP		Z,STCP
+  F068  CAC7F3        			JP		Z,STCP
   F06B  FE4D          			CP		'M'         ;FDM:MEMORY DUMP
-  F06D  CAE6F3        			JP		Z,STMD
+  F06D  CAF4F3        			JP		Z,STMD
   F070  FE57          			CP		'W'         ;FDW:MEMORY WRITE
-  F072  CA6BF4        			JP		Z,STMW
+  F072  CA79F4        			JP		Z,STMW
   F075  FE5A          			CP		'Z'         ;FDZ:MZ-700 PATCH START
-  F077  CAB8F4        			JP		Z,STMZ
+  F077  CAC6F4        			JP		Z,STMZ
   F07A  FE55          			CP		'U'         ;FDU:MZ-700 裏RAM START
-  F07C  CA27F5        			JP		Z,STURA
+  F07C  CA35F5        			JP		Z,STURA
   F07F  C34CF1        			JP		CMDERR
                       	
                       	;**** 8255初期化 ****
@@ -132,7 +135,7 @@
                       	;**** LOAD ****
                       	;受信ヘッダ情報をセットし、SDカードからLOAD実行
   F08D  3E81          	SDLOAD:	LD		A,81H  ;LOADコマンド81H
-  F08F  CDAAF5        			CALL	STCMD
+  F08F  CDB8F5        			CALL	STCMD
   F092  CDACF0        			CALL	HDRCV      ;ヘッダ情報受信
   F095  CDEDF0        			CALL	DBRCV      ;データ受信
   F098  3AA611        			LD		A,(LBUF+3)
@@ -149,40 +152,40 @@
                       	;ヘッダ受信
   F0AC  21F110        	HDRCV:	LD		HL,FNAME
   F0AF  0611          			LD		B,11H
-  F0B1  CD3EF5        	HDRC1:	CALL	RCVBYTE    ;ファイルネーム受信
+  F0B1  CD4CF5        	HDRC1:	CALL	RCVBYTE    ;ファイルネーム受信
   F0B4  77            			LD		(HL),A
   F0B5  23            			INC		HL
   F0B6  05            			DEC		B
   F0B7  20F8          			JR		NZ,HDRC1
-  F0B9  11BEF5        			LD		DE,MSG_LD  ;ファイルネームLOADING表示
+  F0B9  11CCF5        			LD		DE,MSG_LD  ;ファイルネームLOADING表示
   F0BC  CD1500        			CALL	MSGPR
   F0BF  11F110        			LD		DE,FNAME
   F0C2  CD1500        			CALL	MSGPR
   F0C5  CD0600        			CALL	LETLN
   F0C8  210411        			LD		HL,SADRS  ;SADRS取得
-  F0CB  CD3EF5        			CALL	RCVBYTE
+  F0CB  CD4CF5        			CALL	RCVBYTE
   F0CE  77            			LD		(HL),A
   F0CF  23            			INC		HL
-  F0D0  CD3EF5        			CALL	RCVBYTE
+  F0D0  CD4CF5        			CALL	RCVBYTE
   F0D3  77            			LD		(HL),A
   F0D4  210211        			LD		HL,FSIZE   ;FSIZE取得
-  F0D7  CD3EF5        			CALL	RCVBYTE
+  F0D7  CD4CF5        			CALL	RCVBYTE
   F0DA  77            			LD		(HL),A
   F0DB  23            			INC		HL
-  F0DC  CD3EF5        			CALL	RCVBYTE
+  F0DC  CD4CF5        			CALL	RCVBYTE
   F0DF  77            			LD		(HL),A
   F0E0  210611        			LD		HL,EXEAD   ;EXEAD取得
-  F0E3  CD3EF5        			CALL	RCVBYTE
+  F0E3  CD4CF5        			CALL	RCVBYTE
   F0E6  77            			LD		(HL),A
   F0E7  23            			INC		HL
-  F0E8  CD3EF5        			CALL	RCVBYTE
+  F0E8  CD4CF5        			CALL	RCVBYTE
   F0EB  77            			LD		(HL),A
   F0EC  C9            			RET
                       	
                       	;データ受信
   F0ED  ED5B0211      	DBRCV:	LD		DE,(FSIZE)
   F0F1  2A0411        			LD		HL,(SADRS)
-  F0F4  CD3EF5        	DBRLOP:	CALL	RCVBYTE
+  F0F4  CD4CF5        	DBRLOP:	CALL	RCVBYTE
   F0F7  77            			LD		(HL),A
   F0F8  1B            			DEC		DE
   F0F9  7A            			LD		A,D
@@ -239,26 +242,26 @@
   F13F  EB            			EX		DE,HL
   F140  180F          			JR		SDSAVE      ;SAVE処理へ
   F142                	STSV1:                      ;16進数4桁の取得に失敗又はEADRSがSARDSより大きくない
-  F142  1108F6        			LD		DE,MSG_AD
+  F142  1116F6        			LD		DE,MSG_AD
   F145  184F          			JR		ERRMSG
   F147                	STSV2:                      ;ファイルネームの取得に失敗
-  F147  1118F6        			LD		DE,MSG_FNAME
+  F147  1126F6        			LD		DE,MSG_FNAME
   F14A  184A          			JR		ERRMSG
   F14C                	CMDERR:                     ;コマンド異常
-  F14C  112AF6        			LD		DE,MSG_CMD
+  F14C  1138F6        			LD		DE,MSG_CMD
   F14F  1845          			JR		ERRMSG
                       	
                       	;送信ヘッダ情報をセットし、SDカードへSAVE実行
   F151  3E80          	SDSAVE:	LD		A,80H      ;SAVEコマンド80H
-  F153  CD90F5        			CALL	STCD
+  F153  CD9EF5        			CALL	STCD
   F156  A7            			AND		A          ;00以外ならERROR
   F157  C26CF1        			JP		NZ,SVERR
   F15A  CDB6F1        			CALL	HDSEND     ;ヘッダ情報送信
-  F15D  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F15D  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
   F160  A7            			AND		A          ;00以外ならERROR
   F161  2009          			JR		NZ,SVERR
   F163  CDFBF1        			CALL	DBSEND     ;データ送信
-  F166  11D1F5        			LD		DE,MSG_SV
+  F166  11DFF5        			LD		DE,MSG_SV
   F169  182B          			JR		ERRMSG
                       	
   F16B                	SVER0:
@@ -266,7 +269,7 @@
   F16C                	SVERR:
   F16C  FEF0          			CP		0F0H
   F16E  2005          			JR		NZ,ERR3
-  F170  113AF6        			LD		DE,MSG_F0  ;SD-CARD INITIALIZE ERROR
+  F170  1148F6        			LD		DE,MSG_F0  ;SD-CARD INITIALIZE ERROR
   F173  1821          			JR		ERRMSG
                       	;FDコマンドでロード可能なファイル種類コードは0x01のみとしていた制限を撤廃
                       	;ERR2:	CP		0F2H
@@ -275,18 +278,18 @@
                       	;		JR		ERRMSG
   F175  FEF1          	ERR3:	CP		0F1H
   F177  2005          			JR		NZ,ERR4
-  F179  1153F6        			LD		DE,MSG_F1  ;NOT FIND FILE
+  F179  1161F6        			LD		DE,MSG_F1  ;NOT FIND FILE
   F17C  1818          			JR		ERRMSG
   F17E  FEF3          	ERR4:	CP		0F3H
   F180  2005          			JR		NZ,ERR5
-  F182  1161F6        			LD		DE,MSG_F3  ;FILE EXIST
+  F182  116FF6        			LD		DE,MSG_F3  ;FILE EXIST
   F185  180F          			JR		ERRMSG
   F187  FEF4          	ERR5:	CP		0F4H
   F189  2005          			JR		NZ,ERR99
-  F18B  112AF6        			LD		DE,MSG_CMD
+  F18B  1138F6        			LD		DE,MSG_CMD
   F18E  1806          			JR		ERRMSG
   F190  CDC303        	ERR99:	CALL	PRTBYT
-  F193  1176F7        			LD		DE,MSG99   ;その他ERROR
+  F193  1184F7        			LD		DE,MSG99   ;その他ERROR
   F196  CD1500        	ERRMSG:	CALL	MSGPR
   F199  CD0600        			CALL	LETLN
   F19C  214E01        	MON:	LD		HL,014EH
@@ -305,39 +308,39 @@
   F1B6  E5            	HDSEND:	PUSH	HL
   F1B7  0620          			LD		B,20H
   F1B9  7E            	SS1:	LD		A,(HL)     ;FNAME送信
-  F1BA  CD51F5        			CALL	SNDBYTE
+  F1BA  CD5FF5        			CALL	SNDBYTE
   F1BD  23            			INC		HL
   F1BE  05            			DEC		B
   F1BF  20F8          			JR		NZ,SS1
   F1C1  3E0D          			LD		A,0DH
-  F1C3  CD51F5        			CALL	SNDBYTE
+  F1C3  CD5FF5        			CALL	SNDBYTE
   F1C6  E1            			POP		HL
   F1C7  0610          			LD		B,10H
   F1C9  7E            	SS2:	LD		A,(HL)     ;PNAME送信
-  F1CA  CD51F5        			CALL	SNDBYTE
+  F1CA  CD5FF5        			CALL	SNDBYTE
   F1CD  23            			INC		HL
   F1CE  05            			DEC		B
   F1CF  20F8          			JR		NZ,SS2
   F1D1  3E0D          			LD		A,0DH
-  F1D3  CD51F5        			CALL	SNDBYTE
+  F1D3  CD5FF5        			CALL	SNDBYTE
   F1D6  210411        			LD		HL,SADRS   ;SADRS送信
   F1D9  7E            			LD		A,(HL)
-  F1DA  CD51F5        			CALL	SNDBYTE
+  F1DA  CD5FF5        			CALL	SNDBYTE
   F1DD  23            			INC		HL
   F1DE  7E            			LD		A,(HL)
-  F1DF  CD51F5        			CALL	SNDBYTE
+  F1DF  CD5FF5        			CALL	SNDBYTE
   F1E2  210211        			LD		HL,EADRS   ;EADRS送信
   F1E5  7E            			LD		A,(HL)
-  F1E6  CD51F5        			CALL	SNDBYTE
+  F1E6  CD5FF5        			CALL	SNDBYTE
   F1E9  23            			INC		HL
   F1EA  7E            			LD		A,(HL)
-  F1EB  CD51F5        			CALL	SNDBYTE
+  F1EB  CD5FF5        			CALL	SNDBYTE
   F1EE  210611        			LD		HL,EXEAD   ;EXEAD送信
   F1F1  7E            			LD		A,(HL)
-  F1F2  CD51F5        			CALL	SNDBYTE
+  F1F2  CD5FF5        			CALL	SNDBYTE
   F1F5  23            			INC		HL
   F1F6  7E            			LD		A,(HL)
-  F1F7  CD51F5        			CALL	SNDBYTE
+  F1F7  CD5FF5        			CALL	SNDBYTE
   F1FA  C9            			RET
                       	
                       	;データ送信
@@ -346,7 +349,7 @@
   F1FE  EB            			EX		DE,HL
   F1FF  2A0411        			LD		HL,(SADRS)
   F202  7E            	DBSLOP:	LD		A,(HL)
-  F203  CD51F5        			CALL	SNDBYTE
+  F203  CD5FF5        			CALL	SNDBYTE
   F206  7C            			LD		A,H
   F207  BA            			CP		D
   F208  2004          			JR		NZ,DBSLP1
@@ -359,867 +362,950 @@
                       	
                       	;**** AUTO START SET ****
   F212  3E82          	STAS:	LD		A,82H      ;AUTO START SETコマンド82H
-  F214  CDAAF5        			CALL	STCMD
-  F217  11E0F5        			LD		DE,MSG_AS
+  F214  CDB8F5        			CALL	STCMD
+  F217  11EEF5        			LD		DE,MSG_AS
   F21A  C396F1        			JP		ERRMSG
+                      	
                       	
                       	;**** DIRLIST ****
   F21D  13            	STLT:	INC		DE
-                      	;		LD		A,(DE)
-                      	;		CP		0DH
-                      	;		JR		NZ,STLT1
-                      	;		LD		A,30H
-                      	;		LD		A,20H
-                      	;		JR		DIRLIST    ;FDLだけなら'20H'を送信(全ファイルを表示)
-                      	;STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
-                      	;		LD		A,(DE)
-  F21E                	DIRLIST:
-                      	;		PUSH	AF
-  F21E  3E83          			LD		A,83H      ;DIRLISTコマンド83Hを送信
-  F220  CD90F5        			CALL	STCD       ;コマンドコード送信
-  F223  A7            			AND		A          ;00以外ならERROR
-  F224  C26CF1        			JP		NZ,SVERR
-                      	;		POP		AF
-  F227  0621          			LD		B,21H
-  F229  1A            	STLT1:	LD		A,(DE)
-  F22A  FE0D          			CP		0DH
-  F22C  2002          			JR		NZ,STLT2
-  F22E  3E00          			LD		A,00H
-  F230  CD51F5        	STLT2:	CALL	SNDBYTE           ;ページ指示を送信
-  F233  13            			INC		DE
-  F234  05            			DEC		B
-  F235  20F2          			JR		NZ,STLT1
-  F237  2182F7        	DL1:	LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
-  F23A  11A311        			LD		DE,LBUF
-  F23D  010500        			LD		BC,DEND-DEFDIR
-  F240  EDB0          			LDIR
-  F242  EB            			EX		DE,HL
-  F243  CD3EF5        	DL2:	CALL	RCVBYTE           ;'00H'を受信するまでを一行とする
-  F246  FE00          			CP		00H
-  F248  280C          			JR		Z,DL3
-  F24A  FEFF          			CP		0FFH              ;'0FFH'を受信したら終了
-  F24C  2813          			JR		Z,DL4
-  F24E  FEFE          			CP		0FEH              ;'0FEH'を受信したら一時停止して一文字入力待ち
-  F250  2819          			JR		Z,DL5
-  F252  77            			LD		(HL),A
-  F253  23            			INC		HL
-  F254  18ED          			JR		DL2
-  F256  11A311        	DL3:	LD		DE,LBUF           ;'00H'を受信したら一行分を表示して改行
-  F259  CD1500        			CALL	MSGPR
-  F25C  CD0600        			CALL	LETLN
-  F25F  18D6          			JR		DL1
-  F261  CD3EF5        	DL4:	CALL	RCVBYTE           ;状態取得(00H=OK)
-  F264  A7            			AND		A                 ;00以外ならERROR
-  F265  C26CF1        			JP		NZ,SVERR
-  F268  C39CF1        			JP		MON
+  F21E  2190F7        			LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
+  F221  010500        			LD		BC,DEND-DEFDIR
+  F224  CD2EF2        			CALL	DIRLIST
+  F227  A7            			AND		A                 ;00以外ならERROR
+  F228  C26CF1        			JP		NZ,SVERR
+  F22B  C39CF1        			JP		MON
                       	
-  F26B  116CF6        	DL5:	LD		DE,MSG_KEY1        ;HIT ANT KEY表示
-  F26E  CD1500        			CALL	MSGPR
-  F271  3EC2          			LD		A,0C2H
-  F273  CDB50D        			CALL	DISPCH
-  F276  1183F6        			LD		DE,MSG_KEY2        ;HIT ANT KEY表示
-  F279  CD1500        			CALL	MSGPR
-  F27C  CD0600        			CALL	LETLN
-  F27F  CD1B00        	DL6:	CALL	GETKEY            ;1文字入力待ち
-  F282  FE00          			CP		00H
-  F284  28F9          			JR		Z,DL6
-  F286  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
-  F288  2816          			JR		Z,DL7
-  F28A  FE12          			CP		12H               ;カーソル↑で打ち切り
-  F28C  2808          			JR		Z,DL9
-  F28E  FE42          			CP		42H               ;「B」で前ページ
-  F290  2810          			JR		Z,DL8
-  F292  3E00          			LD		A,00H             ;それ以外で継続
-  F294  180C          			JR		DL8
-  F296  3EC2          	DL9:	LD		A,0C2H            ;カーソル↑で打ち切ったときにカーソル2行上へ
-  F298  CDDC0D        			CALL	DPCT
-  F29B  3EC2          			LD		A,0C2H
-  F29D  CDDC0D        			CALL	DPCT
-  F2A0  3EFF          	DL7:	LD		A,0FFH            ;0FFH中断コードを送信
-  F2A2  CD51F5        	DL8:	CALL	SNDBYTE
-  F2A5  CD0600        			CALL	LETLN
-  F2A8  1899          			JR		DL2
+                      	
+                      	;**** DIRLIST本体 (HL=行頭に付加する文字列の先頭アドレス BC=行頭に付加する文字列の長さ) ****
+                      	;****              戻り値 A=エラーコード ****
+  F22E                	DIRLIST:
+  F22E  3E83          			LD		A,83H      ;DIRLISTコマンド83Hを送信
+  F230  CD9EF5        			CALL	STCD       ;コマンドコード送信
+  F233  A7            			AND		A          ;00以外ならERROR
+  F234  C2B7F2        			JP		NZ,DLRET
+                      			
+  F237  C5            			PUSH	BC
+  F238  0621          			LD		B,21H
+  F23A  1A            	STLT1:	LD		A,(DE)
+  F23B  FE0D          			CP		0DH
+  F23D  2002          			JR		NZ,STLT2
+  F23F  3E00          			LD		A,00H
+  F241  CD5FF5        	STLT2:	CALL	SNDBYTE           ;ページ指示を送信
+  F244  13            			INC		DE
+  F245  05            			DEC		B
+  F246  20F2          			JR		NZ,STLT1
+  F248  C1            			POP		BC
+  F249                	DL1:
+  F249  E5            			PUSH	HL
+  F24A  C5            			PUSH	BC
+                      	;		LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
+  F24B  11A311        			LD		DE,LBUF
+                      	;		LD		BC,DEND-DEFDIR
+  F24E  EDB0          			LDIR
+  F250  EB            			EX		DE,HL
+  F251  CD4CF5        	DL2:	CALL	RCVBYTE           ;'00H'を受信するまでを一行とする
+  F254  FE00          			CP		00H
+  F256  280C          			JR		Z,DL3
+  F258  FEFF          			CP		0FFH              ;'0FFH'を受信したら終了
+  F25A  2815          			JR		Z,DL4
+  F25C  FEFE          			CP		0FEH              ;'0FEH'を受信したら一時停止して一文字入力待ち
+  F25E  2818          			JR		Z,DL5
+  F260  77            			LD		(HL),A
+  F261  23            			INC		HL
+  F262  18ED          			JR		DL2
+  F264  11A311        	DL3:	LD		DE,LBUF           ;'00H'を受信したら一行分を表示して改行
+  F267  CD1500        			CALL	MSGPR
+  F26A  CD0600        			CALL	LETLN
+  F26D  C1            			POP		BC
+  F26E  E1            			POP		HL
+  F26F  18D8          			JR		DL1
+  F271  CD4CF5        	DL4:	CALL	RCVBYTE           ;状態取得(00H=OK)
+  F274  C1            			POP		BC
+  F275  E1            			POP		HL
+  F276  183F          			JR		DLRET
+                      	
+  F278  117AF6        	DL5:	LD		DE,MSG_KEY1        ;HIT ANT KEY表示
+  F27B  CD1500        			CALL	MSGPR
+  F27E  3EC2          			LD		A,0C2H
+  F280  CDB50D        			CALL	DISPCH
+  F283  1191F6        			LD		DE,MSG_KEY2        ;HIT ANT KEY表示
+  F286  CD1500        			CALL	MSGPR
+  F289  CD0600        			CALL	LETLN
+  F28C  CD1B00        	DL6:	CALL	GETKEY            ;1文字入力待ち
+  F28F  FE00          			CP		00H
+  F291  28F9          			JR		Z,DL6
+  F293  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
+  F295  2816          			JR		Z,DL7
+  F297  FE12          			CP		12H               ;カーソル↑で打ち切り
+  F299  2808          			JR		Z,DL9
+  F29B  FE42          			CP		42H               ;「B」で前ページ
+  F29D  2810          			JR		Z,DL8
+  F29F  3E00          			LD		A,00H             ;それ以外で継続
+  F2A1  180C          			JR		DL8
+  F2A3  3EC2          	DL9:	LD		A,0C2H            ;カーソル↑で打ち切ったときにカーソル2行上へ
+  F2A5  CDDC0D        			CALL	DPCT
+  F2A8  3EC2          			LD		A,0C2H
+  F2AA  CDDC0D        			CALL	DPCT
+  F2AD  3EFF          	DL7:	LD		A,0FFH            ;0FFH中断コードを送信
+  F2AF  CD5FF5        	DL8:	CALL	SNDBYTE
+  F2B2  CD0600        			CALL	LETLN
+  F2B5  189A          			JR		DL2
+                      			
+  F2B7                	DLRET:		
+  F2B7  C9            			RET
+                      			
                       	
                       	;**** FILE DELETE ****
-  F2AA  3E84          	STDE:	LD		A,84H      ;FILE DELETEコマンド84H
-  F2AC  CDAAF5        			CALL	STCMD
+  F2B8  3E84          	STDE:	LD		A,84H      ;FILE DELETEコマンド84H
+  F2BA  CDB8F5        			CALL	STCMD
                       	
-  F2AF  1193F6        			LD		DE,MSG_DELQ ;'DELETE?'表示
-  F2B2  CD1500        			CALL	MSGPR
-  F2B5  CD0600        			CALL	LETLN
-  F2B8  CD1B00        	STDE3:	CALL	GETKEY
-  F2BB  FE00          			CP		00H
-  F2BD  28F9          			JR		Z,STDE3
-  F2BF  FE59          			CP		59H         ;'Y'ならOKとして00Hを送信
-  F2C1  2004          			JR		NZ,STDE4
-  F2C3  3E00          			LD		A,00H
-  F2C5  1802          			JR		STDE5
-  F2C7  3EFF          	STDE4:	LD		A,0FFH      ;'Y'以外ならCANSELとして0FFHを送信
-  F2C9  CD51F5        	STDE5:	CALL	SNDBYTE
-  F2CC  CD3EF5        			CALL	RCVBYTE
-  F2CF  FE00          			CP		00H         ;00Hを受信すればDELETE完了
-  F2D1  2005          			JR		NZ,STDE6
-  F2D3  11B2F6        			LD		DE,MSG_DELY ;'DELETE OK'表示
-  F2D6  180C          			JR		STDE8
-  F2D8  FE01          	STDE6:	CP		01H         ;01Hを受信すればCANSEL完了
-  F2DA  2005          			JR		NZ,STDE7
-  F2DC  11BCF6        			LD		DE,MSG_DELN ;'DELETE CANSEL'表示
-  F2DF  1803          			JR		STDE8
-  F2E1  C36CF1        	STDE7:	JP		SVERR
-  F2E4  C396F1        	STDE8:	JP		ERRMSG
+  F2BD  11A1F6        			LD		DE,MSG_DELQ ;'DELETE?'表示
+  F2C0  CD1500        			CALL	MSGPR
+  F2C3  CD0600        			CALL	LETLN
+  F2C6  CD1B00        	STDE3:	CALL	GETKEY
+  F2C9  FE00          			CP		00H
+  F2CB  28F9          			JR		Z,STDE3
+  F2CD  FE59          			CP		59H         ;'Y'ならOKとして00Hを送信
+  F2CF  2004          			JR		NZ,STDE4
+  F2D1  3E00          			LD		A,00H
+  F2D3  1802          			JR		STDE5
+  F2D5  3EFF          	STDE4:	LD		A,0FFH      ;'Y'以外ならCANSELとして0FFHを送信
+  F2D7  CD5FF5        	STDE5:	CALL	SNDBYTE
+  F2DA  CD4CF5        			CALL	RCVBYTE
+  F2DD  FE00          			CP		00H         ;00Hを受信すればDELETE完了
+  F2DF  2005          			JR		NZ,STDE6
+  F2E1  11C0F6        			LD		DE,MSG_DELY ;'DELETE OK'表示
+  F2E4  180C          			JR		STDE8
+  F2E6  FE01          	STDE6:	CP		01H         ;01Hを受信すればCANSEL完了
+  F2E8  2005          			JR		NZ,STDE7
+  F2EA  11CAF6        			LD		DE,MSG_DELN ;'DELETE CANSEL'表示
+  F2ED  1803          			JR		STDE8
+  F2EF  C36CF1        	STDE7:	JP		SVERR
+  F2F2  C396F1        	STDE8:	JP		ERRMSG
                       	
                       	;**** FILE RENAME ****
-  F2E7  3E85          	STRN:	LD		A,85H      ;FILE RENAMEコマンド85H
-  F2E9  CDAAF5        			CALL	STCMD
+  F2F5  3E85          	STRN:	LD		A,85H      ;FILE RENAMEコマンド85H
+  F2F7  CDB8F5        			CALL	STCMD
                       	
-  F2EC  11CAF6        			LD		DE,MSG_REN ;'NEW NAME:'表示
-  F2EF  CD1500        			CALL	MSGPR
+  F2FA  11D8F6        			LD		DE,MSG_REN ;'NEW NAME:'表示
+  F2FD  CD1500        			CALL	MSGPR
                       			
-  F2F2  3E09          			LD		A,09H
-  F2F4  327111        			LD		(DSPX),A  ;カーソル位置を'NEW NAME:'の次へ
-  F2F7  11A311        			LD		DE,LBUF    ;NEW FILE NAMEを取得
-  F2FA  CD0300        			CALL	GETL
-  F2FD  11AB11        			LD		DE,LBUF+8  ;NEW FILE NAMEを送信
-  F300  CD81F5        			CALL	STFN
-  F303  CD97F5        			CALL	STFS
+  F300  3E09          			LD		A,09H
+  F302  327111        			LD		(DSPX),A  ;カーソル位置を'NEW NAME:'の次へ
+  F305  11A311        			LD		DE,LBUF    ;NEW FILE NAMEを取得
+  F308  CD0300        			CALL	GETL
+  F30B  11AB11        			LD		DE,LBUF+8  ;NEW FILE NAMEを送信
+  F30E  CD8FF5        			CALL	STFN
+  F311  CDA5F5        			CALL	STFS
                       			
-  F306  CD3EF5        			CALL	RCVBYTE
-  F309  FE00          			CP		00H         ;00Hを受信すればRENAME完了
-  F30B  C26CF1        			JP		NZ,SVERR
-  F30E  1116F7        			LD		DE,MSG_RENY
-  F311  C396F1        			JP		ERRMSG
+  F314  CD4CF5        			CALL	RCVBYTE
+  F317  FE00          			CP		00H         ;00Hを受信すればRENAME完了
+  F319  C26CF1        			JP		NZ,SVERR
+  F31C  1124F7        			LD		DE,MSG_RENY
+  F31F  C396F1        			JP		ERRMSG
                       	
                       	;**** FILE DUMP ****
-  F314  3E86          	STPR:	LD		A,86H      ;FILE DUMPEコマンド86H
-  F316  CDAAF5        			CALL	STCMD
+  F322  3E86          	STPR:	LD		A,86H      ;FILE DUMPEコマンド86H
+  F324  CDB8F5        			CALL	STCMD
                       	
                       	;		LD		A,0C6H     ;画面クリア
                       	;		CALL	DPCT
-  F319  210411        	STPR6:	LD		HL,SADRS   ;SADRS取得
-  F31C  CD3EF5        			CALL	RCVBYTE
-  F31F  77            			LD		(HL),A
-  F320  23            			INC		HL
-  F321  CD3EF5        			CALL	RCVBYTE
-  F324  77            			LD		(HL),A
-  F325  2A0411        			LD		HL,(SADRS)
-  F328  7C            			LD		A,H
-  F329  FEFF          			CP		0FFH        ;ADRSに0FFFFHが送信されてきたらDUMP処理終了
-  F32B  2008          			JR		NZ,STPR7
-  F32D  7D            			LD		A,L
-  F32E  FEFF          			CP		0FFH
-  F330  2003          			JR		NZ,STPR7
-  F332  C3B3F3        			JP		STPR8
-  F335  1120F7        	STPR7:	LD		DE,MSG_AD1 ;DUMP TITLE表示
-  F338  CD1500        			CALL	MSGPR
-  F33B  CD0600        			CALL	LETLN
-  F33E  0E10          			LD		C,10H      ;16行(128Byte)を表示
-  F340  C5            	STPR0:	PUSH	BC
-  F341  0608          			LD		B,08H      ;一行(8Byte)を受信
-  F343  21A311        			LD		HL,LBUF
-  F346  CD3EF5        	STPR1:	CALL	RCVBYTE
-  F349  77            			LD		(HL),A
-  F34A  23            			INC		HL
-  F34B  05            			DEC		B
-  F34C  20F8          			JR		NZ,STPR1
+  F327  210411        	STPR6:	LD		HL,SADRS   ;SADRS取得
+  F32A  CD4CF5        			CALL	RCVBYTE
+  F32D  77            			LD		(HL),A
+  F32E  23            			INC		HL
+  F32F  CD4CF5        			CALL	RCVBYTE
+  F332  77            			LD		(HL),A
+  F333  2A0411        			LD		HL,(SADRS)
+  F336  7C            			LD		A,H
+  F337  FEFF          			CP		0FFH        ;ADRSに0FFFFHが送信されてきたらDUMP処理終了
+  F339  2008          			JR		NZ,STPR7
+  F33B  7D            			LD		A,L
+  F33C  FEFF          			CP		0FFH
+  F33E  2003          			JR		NZ,STPR7
+  F340  C3C1F3        			JP		STPR8
+  F343  112EF7        	STPR7:	LD		DE,MSG_AD1 ;DUMP TITLE表示
+  F346  CD1500        			CALL	MSGPR
+  F349  CD0600        			CALL	LETLN
+  F34C  0E10          			LD		C,10H      ;16行(128Byte)を表示
+  F34E  C5            	STPR0:	PUSH	BC
+  F34F  0608          			LD		B,08H      ;一行(8Byte)を受信
+  F351  21A311        			LD		HL,LBUF
+  F354  CD4CF5        	STPR1:	CALL	RCVBYTE
+  F357  77            			LD		(HL),A
+  F358  23            			INC		HL
+  F359  05            			DEC		B
+  F35A  20F8          			JR		NZ,STPR1
                       	
-  F34E  2A0411        			LD		HL,(SADRS) ;アドレス表示
-  F351  CDBA03        			CALL	PRTWRD
-  F354  110800        			LD		DE,0008H   ;一画面(128Byte)中はアドレスを受け取らないので自前でインクリメント
-  F357  19            			ADD		HL,DE
-  F358  220411        			LD		(SADRS),HL
+  F35C  2A0411        			LD		HL,(SADRS) ;アドレス表示
+  F35F  CDBA03        			CALL	PRTWRD
+  F362  110800        			LD		DE,0008H   ;一画面(128Byte)中はアドレスを受け取らないので自前でインクリメント
+  F365  19            			ADD		HL,DE
+  F366  220411        			LD		(SADRS),HL
                       			
-  F35B  0608          			LD		B,08H      ;一行(8Byte)のデータを16進数表示
-  F35D  11A311        			LD		DE,LBUF
-  F360  CD0C00        	STPR2:	CALL	PRNTS
-  F363  1A            			LD		A,(DE)
-  F364  CDC303        			CALL	PRTBYT
-  F367  13            			INC		DE
-  F368  05            			DEC		B
-  F369  20F5          			JR		NZ,STPR2
+  F369  0608          			LD		B,08H      ;一行(8Byte)のデータを16進数表示
+  F36B  11A311        			LD		DE,LBUF
+  F36E  CD0C00        	STPR2:	CALL	PRNTS
+  F371  1A            			LD		A,(DE)
+  F372  CDC303        			CALL	PRTBYT
+  F375  13            			INC		DE
+  F376  05            			DEC		B
+  F377  20F5          			JR		NZ,STPR2
                       			
-  F36B  CD0C00        			CALL	PRNTS
-  F36E  11A311        			LD		DE,LBUF    ;一行(8Byte)のデータをキャラクタ表示
-  F371  0608          			LD		B,08H
-  F373  1A            	STPR9:	LD		A,(DE)
-  F374  FE10          			CP		10H        ;MZ-700での文字化けに対処
-  F376  3002          			JR		NC,STPRA
-  F378  3E20          			LD		A,20H
-  F37A  CDB90B        	STPRA:	CALL	ADCN
-  F37D  CDB50D        			CALL	DISPCH
-  F380  13            			INC		DE
-  F381  05            			DEC		B
-  F382  20EF          			JR		NZ,STPR9
+  F379  CD0C00        			CALL	PRNTS
+  F37C  11A311        			LD		DE,LBUF    ;一行(8Byte)のデータをキャラクタ表示
+  F37F  0608          			LD		B,08H
+  F381  1A            	STPR9:	LD		A,(DE)
+  F382  FE10          			CP		10H        ;MZ-700での文字化けに対処
+  F384  3002          			JR		NC,STPRA
+  F386  3E20          			LD		A,20H
+  F388  CDB90B        	STPRA:	CALL	ADCN
+  F38B  CDB50D        			CALL	DISPCH
+  F38E  13            			INC		DE
+  F38F  05            			DEC		B
+  F390  20EF          			JR		NZ,STPR9
                       	
-  F384  CD0600        			CALL	LETLN
-  F387  C1            			POP		BC
-  F388  0D            			DEC		C
-  F389  20B5          			JR		NZ,STPR0
+  F392  CD0600        			CALL	LETLN
+  F395  C1            			POP		BC
+  F396  0D            			DEC		C
+  F397  20B5          			JR		NZ,STPR0
                       			
-  F38B  1146F7        			LD		DE,MSG_AD2        ;入力待ちメッセージ表示
-  F38E  CD1500        			CALL	MSGPR
-  F391  CD0600        			CALL	LETLN
-  F394  CD0600        			CALL	LETLN
-  F397  CD1B00        	STPR3:	CALL	GETKEY            ;1文字入力待ち
-  F39A  FE00          			CP		00H
-  F39C  28F9          			JR		Z,STPR3
-  F39E  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
-  F3A0  2806          			JR		Z,STPR4
-  F3A2  CD51F5        			CALL	SNDBYTE           ;SHIFT+BREAK以外はASCIIコードのまま送信、ARDUINO側で'B'を処理
-  F3A5  C319F3        			JP		STPR6
-  F3A8  3EFF          	STPR4:	LD		A,0FFH            ;0FFH中断コードを送信
-  F3AA  CD51F5        	STPR5:	CALL	SNDBYTE
-  F3AD  CD3EF5        			CALL	RCVBYTE           ;SHIFT+BREAKでの中断時はADRS'0FFFFH'の受信及び状態コードの受信を破棄
-  F3B0  CD3EF5        			CALL	RCVBYTE
-  F3B3  CD3EF5        	STPR8:	CALL	RCVBYTE
-  F3B6  C39CF1        			JP		MON
+  F399  1154F7        			LD		DE,MSG_AD2        ;入力待ちメッセージ表示
+  F39C  CD1500        			CALL	MSGPR
+  F39F  CD0600        			CALL	LETLN
+  F3A2  CD0600        			CALL	LETLN
+  F3A5  CD1B00        	STPR3:	CALL	GETKEY            ;1文字入力待ち
+  F3A8  FE00          			CP		00H
+  F3AA  28F9          			JR		Z,STPR3
+  F3AC  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
+  F3AE  2806          			JR		Z,STPR4
+  F3B0  CD5FF5        			CALL	SNDBYTE           ;SHIFT+BREAK以外はASCIIコードのまま送信、ARDUINO側で'B'を処理
+  F3B3  C327F3        			JP		STPR6
+  F3B6  3EFF          	STPR4:	LD		A,0FFH            ;0FFH中断コードを送信
+  F3B8  CD5FF5        	STPR5:	CALL	SNDBYTE
+  F3BB  CD4CF5        			CALL	RCVBYTE           ;SHIFT+BREAKでの中断時はADRS'0FFFFH'の受信及び状態コードの受信を破棄
+  F3BE  CD4CF5        			CALL	RCVBYTE
+  F3C1  CD4CF5        	STPR8:	CALL	RCVBYTE
+  F3C4  C39CF1        			JP		MON
                       	
                       	;**** FILE COPY ****
-  F3B9  3E87          	STCP:	LD		A,87H      ;FILE COPYコマンド87H
-  F3BB  CDAAF5        			CALL	STCMD
-  F3BE  11CAF6        			LD		DE,MSG_REN ;'NEW NAME:'表示
-  F3C1  CD1500        			CALL	MSGPR
+  F3C7  3E87          	STCP:	LD		A,87H      ;FILE COPYコマンド87H
+  F3C9  CDB8F5        			CALL	STCMD
+  F3CC  11D8F6        			LD		DE,MSG_REN ;'NEW NAME:'表示
+  F3CF  CD1500        			CALL	MSGPR
                       			
-  F3C4  3E09          			LD		A,09H
-  F3C6  327111        			LD		(DSPX),A    ;カーソル位置を'NEW NAME:'の次へ
-  F3C9  11A311        			LD		DE,LBUF      ;NEW FILE NAMEを取得
-  F3CC  CD0300        			CALL	GETL
-  F3CF  11AB11        			LD		DE,LBUF+8    ;NEW FILE NAMEを送信
-  F3D2  CD81F5        			CALL	STFN
-  F3D5  CD97F5        			CALL	STFS
+  F3D2  3E09          			LD		A,09H
+  F3D4  327111        			LD		(DSPX),A    ;カーソル位置を'NEW NAME:'の次へ
+  F3D7  11A311        			LD		DE,LBUF      ;NEW FILE NAMEを取得
+  F3DA  CD0300        			CALL	GETL
+  F3DD  11AB11        			LD		DE,LBUF+8    ;NEW FILE NAMEを送信
+  F3E0  CD8FF5        			CALL	STFN
+  F3E3  CDA5F5        			CALL	STFS
                       			
-  F3D8  CD3EF5        			CALL	RCVBYTE
-  F3DB  FE00          			CP		00H         ;00Hを受信すればRENAME完了
-  F3DD  C26CF1        			JP		NZ,SVERR
-  F3E0  1168F7        			LD		DE,MSG_CPY
-  F3E3  C396F1        			JP		ERRMSG
+  F3E6  CD4CF5        			CALL	RCVBYTE
+  F3E9  FE00          			CP		00H         ;00Hを受信すればRENAME完了
+  F3EB  C26CF1        			JP		NZ,SVERR
+  F3EE  1176F7        			LD		DE,MSG_CPY
+  F3F1  C396F1        			JP		ERRMSG
                       	
                       	;**** MEMORY DUMP ****
-  F3E6  13            	STMD:	INC		DE
-  F3E7  13            			INC		DE
-  F3E8  CD1004        			CALL	HLHEX       ;1文字空けて4桁の16進数であればSADRSにセットして続行
-  F3EB  DA42F1        			JP		C,STSV1
-  F3EE  220411        			LD		(SADRS),HL      ;SARDS保存
+  F3F4  13            	STMD:	INC		DE
+  F3F5  13            			INC		DE
+  F3F6  CD1004        			CALL	HLHEX       ;1文字空けて4桁の16進数であればSADRSにセットして続行
+  F3F9  DA42F1        			JP		C,STSV1
+  F3FC  220411        			LD		(SADRS),HL      ;SARDS保存
                       	
-  F3F1  1120F7        	STMD6:	LD		DE,MSG_AD1 ;DUMP TITLE表示
-  F3F4  CD1500        			CALL	MSGPR
-  F3F7  CD0600        			CALL	LETLN
-  F3FA  0E10          			LD		C,10H      ;16行(128Byte)を表示
-  F3FC  2A0411        	STMD7:	LD		HL,(SADRS) ;アドレス表示
-  F3FF  CDBA03        			CALL	PRTWRD
-  F402  CD0C00        			CALL	PRNTS
+  F3FF  112EF7        	STMD6:	LD		DE,MSG_AD1 ;DUMP TITLE表示
+  F402  CD1500        			CALL	MSGPR
+  F405  CD0600        			CALL	LETLN
+  F408  0E10          			LD		C,10H      ;16行(128Byte)を表示
+  F40A  2A0411        	STMD7:	LD		HL,(SADRS) ;アドレス表示
+  F40D  CDBA03        			CALL	PRTWRD
+  F410  CD0C00        			CALL	PRNTS
                       	
                       			
-  F405  0608          			LD		B,08H      ;一行(8Byte)のデータを16進数表示
-  F407  7E            	STMD0:	LD		A,(HL)
-  F408  CDC303        			CALL	PRTBYT
-  F40B  CD0C00        			CALL	PRNTS
-  F40E  CD1B00        			CALL	GETKEY
-  F411  FE64          			CP		64H
-  F413  2853          			JR		Z,STMD4
-  F415  23            			INC		HL
-  F416  05            			DEC		B
-  F417  20EE          			JR		NZ,STMD0
+  F413  0608          			LD		B,08H      ;一行(8Byte)のデータを16進数表示
+  F415  7E            	STMD0:	LD		A,(HL)
+  F416  CDC303        			CALL	PRTBYT
+  F419  CD0C00        			CALL	PRNTS
+  F41C  CD1B00        			CALL	GETKEY
+  F41F  FE64          			CP		64H
+  F421  2853          			JR		Z,STMD4
+  F423  23            			INC		HL
+  F424  05            			DEC		B
+  F425  20EE          			JR		NZ,STMD0
                       	
-  F419  2A0411        			LD		HL,(SADRS)
-  F41C  0608          			LD		B,08H      ;一行(8Byte)のデータをキャラクタ表示
-  F41E  7E            	STMD2:	LD		A,(HL)
-  F41F  FE10          			CP		10H        ;MZ-700での文字化けに対処
-  F421  3002          			JR		NC,STMD8
-  F423  3E20          			LD		A,20H
-  F425  CDB90B        	STMD8:	CALL	ADCN
-  F428  CDB50D        			CALL	DISPCH
-  F42B  CD1B00        			CALL	GETKEY
-  F42E  FE64          			CP		64H        ;表示途中でもSHIFT+BREAKで打ち切り
-  F430  2836          			JR		Z,STMD4
-  F432  23            			INC		HL
-  F433  05            			DEC		B
-  F434  20E8          			JR		NZ,STMD2
+  F427  2A0411        			LD		HL,(SADRS)
+  F42A  0608          			LD		B,08H      ;一行(8Byte)のデータをキャラクタ表示
+  F42C  7E            	STMD2:	LD		A,(HL)
+  F42D  FE10          			CP		10H        ;MZ-700での文字化けに対処
+  F42F  3002          			JR		NC,STMD8
+  F431  3E20          			LD		A,20H
+  F433  CDB90B        	STMD8:	CALL	ADCN
+  F436  CDB50D        			CALL	DISPCH
+  F439  CD1B00        			CALL	GETKEY
+  F43C  FE64          			CP		64H        ;表示途中でもSHIFT+BREAKで打ち切り
+  F43E  2836          			JR		Z,STMD4
+  F440  23            			INC		HL
+  F441  05            			DEC		B
+  F442  20E8          			JR		NZ,STMD2
                       	
-  F436  220411        			LD		(SADRS),HL
-  F439  CD0600        			CALL	LETLN
+  F444  220411        			LD		(SADRS),HL
+  F447  CD0600        			CALL	LETLN
                       	
-  F43C  0D            			DEC		C
-  F43D  20BD          			JR		NZ,STMD7
+  F44A  0D            			DEC		C
+  F44B  20BD          			JR		NZ,STMD7
                       			
-  F43F  1146F7        			LD		DE,MSG_AD2        ;入力待ちメッセージ表示
-  F442  CD1500        			CALL	MSGPR
-  F445  CD0600        			CALL	LETLN
-  F448  CD0600        			CALL	LETLN
-  F44B  CD1B00        	STMD3:	CALL	GETKEY            ;1文字入力待ち
-  F44E  FE00          			CP		00H
-  F450  28F9          			JR		Z,STMD3
-  F452  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
-  F454  2812          			JR		Z,STMD4
-  F456  FE42          			CP		42H
-  F458  200B          			JR		NZ,STMD5
-  F45A  2A0411        			LD		HL,(SADRS)
-  F45D  110001        			LD		DE,0100H
-  F460  ED52          			SBC		HL,DE
-  F462  220411        			LD		(SADRS),HL
-  F465  C3F1F3        	STMD5:	JP		STMD6
-  F468  C39CF1        	STMD4:	JP		MON
+  F44D  1154F7        			LD		DE,MSG_AD2        ;入力待ちメッセージ表示
+  F450  CD1500        			CALL	MSGPR
+  F453  CD0600        			CALL	LETLN
+  F456  CD0600        			CALL	LETLN
+  F459  CD1B00        	STMD3:	CALL	GETKEY            ;1文字入力待ち
+  F45C  FE00          			CP		00H
+  F45E  28F9          			JR		Z,STMD3
+  F460  FE64          			CP		64H               ;SHIFT+BREAKで打ち切り
+  F462  2812          			JR		Z,STMD4
+  F464  FE42          			CP		42H
+  F466  200B          			JR		NZ,STMD5
+  F468  2A0411        			LD		HL,(SADRS)
+  F46B  110001        			LD		DE,0100H
+  F46E  ED52          			SBC		HL,DE
+  F470  220411        			LD		(SADRS),HL
+  F473  C3FFF3        	STMD5:	JP		STMD6
+  F476  C39CF1        	STMD4:	JP		MON
                       	
                       	;**** MEMORY WRITE ****
-  F46B  13            	STMW:	INC		DE
-  F46C  13            			INC		DE
-  F46D  CD1004        			CALL	HLHEX       ;1文字空けて4桁の16進数であればHLにセットして続行
-  F470  DA42F1        			JP		C,STSV1
+  F479  13            	STMW:	INC		DE
+  F47A  13            			INC		DE
+  F47B  CD1004        			CALL	HLHEX       ;1文字空けて4桁の16進数であればHLにセットして続行
+  F47E  DA42F1        			JP		C,STSV1
                       	
-  F473  13            			INC		DE
-  F474  13            			INC		DE
-  F475  13            			INC		DE
-  F476  13            			INC		DE
-  F477  1A            	STSP1:	LD		A,(DE)
-  F478  FE0D          			CP		0DH
-  F47A  2839          			JR		Z,STMW9     ;アドレスのみなら終了
-  F47C  FE20          			CP		20H
-  F47E  2003          			JR		NZ,STMW1
-  F480  13            			INC		DE          ;空白は飛ばす
-  F481  18F4          			JR		STSP1
+  F481  13            			INC		DE
+  F482  13            			INC		DE
+  F483  13            			INC		DE
+  F484  13            			INC		DE
+  F485  1A            	STSP1:	LD		A,(DE)
+  F486  FE0D          			CP		0DH
+  F488  2839          			JR		Z,STMW9     ;アドレスのみなら終了
+  F48A  FE20          			CP		20H
+  F48C  2003          			JR		NZ,STMW1
+  F48E  13            			INC		DE          ;空白は飛ばす
+  F48F  18F4          			JR		STSP1
                       	
-  F483                	STMW1:
-  F483  CD1F04        			CALL	TWOHEX
-  F486  380E          			JR		C,STMW8
-  F488  77            			LD		(HL),A      ;2桁の16進数があれば(HL)に書き込み
-  F489  23            			INC		HL
+  F491                	STMW1:
+  F491  CD1F04        			CALL	TWOHEX
+  F494  380E          			JR		C,STMW8
+  F496  77            			LD		(HL),A      ;2桁の16進数があれば(HL)に書き込み
+  F497  23            			INC		HL
                       	
-  F48A  1A            	STSP2:	LD		A,(DE)
-  F48B  FE0D          			CP		0DH         ;一行終了
-  F48D  2807          			JR		Z,STMW8
-  F48F  FE20          			CP		20H
-  F491  20F0          			JR		NZ,STMW1
-  F493  13            			INC		DE          ;空白は飛ばす
-  F494  18F4          			JR		STSP2
+  F498  1A            	STSP2:	LD		A,(DE)
+  F499  FE0D          			CP		0DH         ;一行終了
+  F49B  2807          			JR		Z,STMW8
+  F49D  FE20          			CP		20H
+  F49F  20F0          			JR		NZ,STMW1
+  F4A1  13            			INC		DE          ;空白は飛ばす
+  F4A2  18F4          			JR		STSP2
                       	
-  F496                	STMW8:	
-  F496  1170F7        			LD		DE,MSG_FDW  ;行頭に'*FDW '
-  F499  CD1500        			CALL	MSGPR
-  F49C  CDBA03        			CALL	PRTWRD      ;アドレス表示
-  F49F  CD0C00        			CALL	PRNTS
-  F4A2  11A311        			LD		DE,LBUF     ;一行入力
-  F4A5  CD0300        			CALL	GETL
-  F4A8  11A311        			LD		DE,LBUF
-  F4AB  1A            			LD		A,(DE)
-  F4AC  FE1B          			CP		1BH
-  F4AE  2805          			JR		Z,STMW9     ;SHIFT+BREAKで破棄、終了
-  F4B0  11A611        			LD		DE,LBUF+3
-  F4B3  18B6          			JR		STMW
-  F4B5  C39CF1        	STMW9:	JP		MON
+  F4A4                	STMW8:	
+  F4A4  117EF7        			LD		DE,MSG_FDW  ;行頭に'*FDW '
+  F4A7  CD1500        			CALL	MSGPR
+  F4AA  CDBA03        			CALL	PRTWRD      ;アドレス表示
+  F4AD  CD0C00        			CALL	PRNTS
+  F4B0  11A311        			LD		DE,LBUF     ;一行入力
+  F4B3  CD0300        			CALL	GETL
+  F4B6  11A311        			LD		DE,LBUF
+  F4B9  1A            			LD		A,(DE)
+  F4BA  FE1B          			CP		1BH
+  F4BC  2805          			JR		Z,STMW9     ;SHIFT+BREAKで破棄、終了
+  F4BE  11A611        			LD		DE,LBUF+3
+  F4C1  18B6          			JR		STMW
+  F4C3  C39CF1        	STMW9:	JP		MON
                       	
                       	;**** MZ-700 PATCH START ****
-  F4B8  F3            	STMZ:	DI
-  F4B9  210000        			LD		HL,0000H      ;ROMを2000Hにコピー
-  F4BC  110020        			LD		DE,2000H
-  F4BF  010010        			LD		BC,1000H
-  F4C2  EDB0          			LDIR
-  F4C4  D3E0          			OUT		(0E0H),A      ;裏RAM ON
-  F4C6  210020        			LD		HL,2000H      ;裏RAMにROMの内容をコピー
-  F4C9  110000        			LD		DE,0000H
-  F4CC  010010        			LD		BC,1000H
-  F4CF  EDB0          			LDIR
-  F4D1  21FAF4        			LD		HL,STMZ2      ;書き換えアドレス
-  F4D4  1118F5        			LD		DE,STMZ3      ;書き換えデータ
-  F4D7  060F          			LD		B,0FH
-  F4D9  C5            	STMZ1:	PUSH	BC
-  F4DA  4E            			LD		C,(HL)
-  F4DB  23            			INC		HL
-  F4DC  46            			LD		B,(HL)
-  F4DD  1A            			LD		A,(DE)
-  F4DE  02            			LD		(BC),A
-  F4DF  C1            			POP		BC
-  F4E0  13            			INC		DE
-  F4E1  23            			INC		HL
-  F4E2  05            			DEC		B
-  F4E3  20F4          			JR		NZ,STMZ1
-  F4E5  21AD00        			LD		HL,00ADH
-  F4E8  7E            			LD		A,(HL)
-  F4E9  FECD          			CP		0CDH
-  F4EB  C20000        			JP		NZ,0000H         ;MZ-700と判断できなければ0000Hからスタート
-  F4EE  11F1F5        			LD		DE,MSG_ST
-  F4F1  CD1500        			CALL	MSGPR
-  F4F4  CD0600        			CALL	LETLN
-  F4F7  C3AD00        			JP		MONITOR_700      ;MZ-700と判断できれば00ADHからスタート
+  F4C6  F3            	STMZ:	DI
+  F4C7  210000        			LD		HL,0000H      ;ROMを2000Hにコピー
+  F4CA  110020        			LD		DE,2000H
+  F4CD  010010        			LD		BC,1000H
+  F4D0  EDB0          			LDIR
+  F4D2  D3E0          			OUT		(0E0H),A      ;裏RAM ON
+  F4D4  210020        			LD		HL,2000H      ;裏RAMにROMの内容をコピー
+  F4D7  110000        			LD		DE,0000H
+  F4DA  010010        			LD		BC,1000H
+  F4DD  EDB0          			LDIR
+  F4DF  2108F5        			LD		HL,STMZ2      ;書き換えアドレス
+  F4E2  1126F5        			LD		DE,STMZ3      ;書き換えデータ
+  F4E5  060F          			LD		B,0FH
+  F4E7  C5            	STMZ1:	PUSH	BC
+  F4E8  4E            			LD		C,(HL)
+  F4E9  23            			INC		HL
+  F4EA  46            			LD		B,(HL)
+  F4EB  1A            			LD		A,(DE)
+  F4EC  02            			LD		(BC),A
+  F4ED  C1            			POP		BC
+  F4EE  13            			INC		DE
+  F4EF  23            			INC		HL
+  F4F0  05            			DEC		B
+  F4F1  20F4          			JR		NZ,STMZ1
+  F4F3  21AD00        			LD		HL,00ADH
+  F4F6  7E            			LD		A,(HL)
+  F4F7  FECD          			CP		0CDH
+  F4F9  C20000        			JP		NZ,0000H         ;MZ-700と判断できなければ0000Hからスタート
+  F4FC  11FFF5        			LD		DE,MSG_ST
+  F4FF  CD1500        			CALL	MSGPR
+  F502  CD0600        			CALL	LETLN
+  F505  C3AD00        			JP		MONITOR_700      ;MZ-700と判断できれば00ADHからスタート
                       	
-  F4FA  370438043904  	STMZ2:	DW		0437H,0438H,0439H
-  F500  760477047804  			DW		0476H,0477H,0478H
-  F506  D904DA04DB04  			DW		04D9H,04DAH,04DBH
-  F50C  F904FA04FB04  			DW		04F9H,04FAH,04FBH
-  F512  89058A058B05  			DW		0589H,058AH,058BH
+  F508  370438043904  	STMZ2:	DW		0437H,0438H,0439H
+  F50E  760477047804  			DW		0476H,0477H,0478H
+  F514  D904DA04DB04  			DW		04D9H,04DAH,04DBH
+  F51A  F904FA04FB04  			DW		04F9H,04FAH,04FBH
+  F520  89058A058B05  			DW		0589H,058AH,058BH
                       	
-  F518  C3            	STMZ3:	DB		0C3H
-  F519  04F0          			DW		ENT1
-  F51B  C3            			DB		0C3H
-  F51C  07F0          			DW		ENT2
-  F51E  C3            			DB		0C3H
-  F51F  0AF0          			DW		ENT3
-  F521  C3            			DB		0C3H
-  F522  0DF0          			DW		ENT4
-  F524  C3            			DB		0C3H
-  F525  10F0          			DW		ENT5
+  F526  C3            	STMZ3:	DB		0C3H
+  F527  04F0          			DW		ENT1
+  F529  C3            			DB		0C3H
+  F52A  07F0          			DW		ENT2
+  F52C  C3            			DB		0C3H
+  F52D  0AF0          			DW		ENT3
+  F52F  C3            			DB		0C3H
+  F530  0DF0          			DW		ENT4
+  F532  C3            			DB		0C3H
+  F533  10F0          			DW		ENT5
                       	
                       	;**** MZ-700 裏RAM START ****
-  F527  D3E0          	STURA:	OUT		(0E0H),A      ;裏RAM ON
-  F529  21AD00        			LD		HL,00ADH
-  F52C  7E            			LD		A,(HL)
-  F52D  FECD          			CP		0CDH
-  F52F  C20000        			JP		NZ,0000H         ;0CDHでなければNZ-700などと判断して0000Hからスタート
-  F532  11F1F5        			LD		DE,MSG_ST
-  F535  CD1500        			CALL	MSGPR
-  F538  CD0600        			CALL	LETLN
-  F53B  C3AD00        			JP		MONITOR_700      ;(00ADH)が0CDHなら1Z-009A又は1Z-009Bのパッチ済みMONITORと判断して00ADHからスタート
+  F535  D3E0          	STURA:	OUT		(0E0H),A      ;裏RAM ON
+  F537  21AD00        			LD		HL,00ADH
+  F53A  7E            			LD		A,(HL)
+  F53B  FECD          			CP		0CDH
+  F53D  C20000        			JP		NZ,0000H         ;0CDHでなければNZ-700などと判断して0000Hからスタート
+  F540  11FFF5        			LD		DE,MSG_ST
+  F543  CD1500        			CALL	MSGPR
+  F546  CD0600        			CALL	LETLN
+  F549  C3AD00        			JP		MONITOR_700      ;(00ADH)が0CDHなら1Z-009A又は1Z-009Bのパッチ済みMONITORと判断して00ADHからスタート
                       	
                       	;**** 1BYTE受信 ****
                       	;受信DATAをAレジスタにセットしてリターン
-  F53E                	RCVBYTE:
-  F53E  CD73F5        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
-  F541  DBD9          			IN		A,(0D9h)   ;PORTB -> A
-  F543  F5            			PUSH 	AF
-  F544  3E05          			LD		A,05H
-  F546  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 1
-  F548  CD7AF5        			CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
-  F54B  3E04          			LD		A,04H
-  F54D  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 0
-  F54F  F1            			POP 	AF
-  F550  C9            			RET
+  F54C                	RCVBYTE:
+  F54C  CD81F5        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
+  F54F  DBD9          			IN		A,(0D9h)   ;PORTB -> A
+  F551  F5            			PUSH 	AF
+  F552  3E05          			LD		A,05H
+  F554  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 1
+  F556  CD88F5        			CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
+  F559  3E04          			LD		A,04H
+  F55B  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 0
+  F55D  F1            			POP 	AF
+  F55E  C9            			RET
                       			
                       	;**** 1BYTE送信 ****
                       	;Aレジスタの内容をPORTA下位4BITに4BITずつ送信
-  F551                	SNDBYTE:
-  F551  F5            			PUSH	AF
-  F552  1F            			RRA
-  F553  1F            			RRA
-  F554  1F            			RRA
-  F555  1F            			RRA
-  F556  E60F          			AND		0FH
-  F558  CD62F5        			CALL	SND4BIT
-  F55B  F1            			POP		AF
-  F55C  E60F          			AND		0FH
-  F55E  CD62F5        			CALL	SND4BIT
-  F561  C9            			RET
+  F55F                	SNDBYTE:
+  F55F  F5            			PUSH	AF
+  F560  1F            			RRA
+  F561  1F            			RRA
+  F562  1F            			RRA
+  F563  1F            			RRA
+  F564  E60F          			AND		0FH
+  F566  CD70F5        			CALL	SND4BIT
+  F569  F1            			POP		AF
+  F56A  E60F          			AND		0FH
+  F56C  CD70F5        			CALL	SND4BIT
+  F56F  C9            			RET
                       	
                       	;**** 4BIT送信 ****
                       	;Aレジスタ下位4ビットを送信する
-  F562                	SND4BIT:
-  F562  D3D8          			OUT		(0D8H),A
-  F564  3E05          			LD		A,05H
-  F566  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 1
-  F568  CD73F5        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
-  F56B  3E04          			LD		A,04H
-  F56D  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 0
-  F56F  CD7AF5        			CALL	F2CHK
-  F572  C9            			RET
+  F570                	SND4BIT:
+  F570  D3D8          			OUT		(0D8H),A
+  F572  3E05          			LD		A,05H
+  F574  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 1
+  F576  CD81F5        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
+  F579  3E04          			LD		A,04H
+  F57B  D3DB          			OUT		(0DBH),A    ;PORTC BIT2 <- 0
+  F57D  CD88F5        			CALL	F2CHK
+  F580  C9            			RET
                       			
                       	;**** BUSYをCHECK(1) ****
                       	; 82H BIT7が1になるまでLOP
-  F573  DBDA          	F1CHK:	IN		A,(0DAH)
-  F575  E680          			AND		80H        ;PORTC BIT7 = 1?
-  F577  28FA          			JR		Z,F1CHK
-  F579  C9            			RET
+  F581  DBDA          	F1CHK:	IN		A,(0DAH)
+  F583  E680          			AND		80H        ;PORTC BIT7 = 1?
+  F585  28FA          			JR		Z,F1CHK
+  F587  C9            			RET
                       	
                       	;**** BUSYをCHECK(0) ****
                       	; 82H BIT7が0になるまでLOOP
-  F57A  DBDA          	F2CHK:	IN		A,(0DAH)
-  F57C  E680          			AND		80H        ;PORTC BIT7 = 0?
-  F57E  20FA          			JR		NZ,F2CHK
-  F580  C9            			RET
+  F588  DBDA          	F2CHK:	IN		A,(0DAH)
+  F58A  E680          			AND		80H        ;PORTC BIT7 = 0?
+  F58C  20FA          			JR		NZ,F2CHK
+  F58E  C9            			RET
                       	
                       	;****** FILE NAME 取得 (IN:DE コマンド文字の次の文字 OUT:HL ファイルネームの先頭)*********
-  F581  F5            	STFN:	PUSH	AF
-  F582  13            	STFN1:	INC		DE         ;ファイルネームまでスペース読み飛ばし
-  F583  1A            			LD		A,(DE)
-  F584  FE20          			CP		20H
-  F586  28FA          			JR		Z,STFN1
-  F588  FE30          			CP		30H        ;「0」以上の文字でなければエラーとする
-  F58A  DA47F1        			JP		C,STSV2
-  F58D  EB            			EX		DE,HL
-  F58E  F1            			POP		AF
-  F58F  C9            			RET
+  F58F  F5            	STFN:	PUSH	AF
+  F590  13            	STFN1:	INC		DE         ;ファイルネームまでスペース読み飛ばし
+  F591  1A            			LD		A,(DE)
+  F592  FE20          			CP		20H
+  F594  28FA          			JR		Z,STFN1
+  F596  FE30          			CP		30H        ;「0」以上の文字でなければエラーとする
+  F598  DA47F1        			JP		C,STSV2
+  F59B  EB            			EX		DE,HL
+  F59C  F1            			POP		AF
+  F59D  C9            			RET
                       	
                       	;**** コマンド送信 (IN:A コマンドコード)****
-  F590  CD51F5        	STCD:	CALL	SNDBYTE    ;Aレジスタのコマンドコードを送信
-  F593  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F596  C9            			RET
+  F59E  CD5FF5        	STCD:	CALL	SNDBYTE    ;Aレジスタのコマンドコードを送信
+  F5A1  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F5A4  C9            			RET
                       	
                       	;**** ファイルネーム送信(IN:HL ファイルネームの先頭) ******
-  F597  0620          	STFS:	LD		B,20H
-  F599  7E            	STFS1:	LD		A,(HL)     ;FNAME送信
-  F59A  CD51F5        			CALL	SNDBYTE
-  F59D  23            			INC		HL
-  F59E  05            			DEC		B
-  F59F  20F8          			JR		NZ,STFS1
-  F5A1  3E0D          			LD		A,0DH
-  F5A3  CD51F5        			CALL	SNDBYTE
-  F5A6  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F5A9  C9            			RET
+  F5A5  0620          	STFS:	LD		B,20H
+  F5A7  7E            	STFS1:	LD		A,(HL)     ;FNAME送信
+  F5A8  CD5FF5        			CALL	SNDBYTE
+  F5AB  23            			INC		HL
+  F5AC  05            			DEC		B
+  F5AD  20F8          			JR		NZ,STFS1
+  F5AF  3E0D          			LD		A,0DH
+  F5B1  CD5FF5        			CALL	SNDBYTE
+  F5B4  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F5B7  C9            			RET
                       	
                       	;**** コマンド、ファイル名送信 (IN:A コマンドコード HL:ファイルネームの先頭)****
-  F5AA  CD81F5        	STCMD:	CALL	STFN       ;ファイルネーム取得
-  F5AD  E5            			PUSH	HL
-  F5AE  CD90F5        			CALL	STCD       ;コマンドコード送信
-  F5B1  E1            			POP		HL
-  F5B2  A7            			AND		A          ;00以外ならERROR
-  F5B3  C26BF1        			JP		NZ,SVER0
-  F5B6  CD97F5        			CALL	STFS       ;ファイルネーム送信
-  F5B9  A7            			AND		A          ;00以外ならERROR
-  F5BA  C26BF1        			JP		NZ,SVER0
-  F5BD  C9            			RET
+  F5B8  CD8FF5        	STCMD:	CALL	STFN       ;ファイルネーム取得
+  F5BB  E5            			PUSH	HL
+  F5BC  CD9EF5        			CALL	STCD       ;コマンドコード送信
+  F5BF  E1            			POP		HL
+  F5C0  A7            			AND		A          ;00以外ならERROR
+  F5C1  C26BF1        			JP		NZ,SVER0
+  F5C4  CDA5F5        			CALL	STFS       ;ファイルネーム送信
+  F5C7  A7            			AND		A          ;00以外ならERROR
+  F5C8  C26BF1        			JP		NZ,SVER0
+  F5CB  C9            			RET
                       	
                       	;******** MESSAGE DATA ********************
-  F5BE                	MSG_LD:
-  F5BE  16            			DB		16H
-  F5BF  4C4F4144494E47			DB		'LOADING '
-  F5C7  0D            			DB		0DH
+  F5CC                	MSG_LD:
+  F5CC  16            			DB		16H
+  F5CD  4C4F4144494E47			DB		'LOADING '
+  F5D5  0D            			DB		0DH
                       	
-  F5C8                	WRMSG:
-  F5C8  57524954494E47			DB		'WRITING '
-  F5D0  0D            			DB		0DH
+  F5D6                	WRMSG:
+  F5D6  57524954494E47			DB		'WRITING '
+  F5DE  0D            			DB		0DH
                       	
-  F5D1                	MSG_SV:
-  F5D1  53415645204649			DB		'SAVE FINISHED!'
-  F5DF  0D            			DB		0DH
+  F5DF                	MSG_SV:
+  F5DF  53415645204649			DB		'SAVE FINISHED!'
+  F5ED  0D            			DB		0DH
                       			
-  F5E0                	MSG_AS:
-  F5E0  41535441525420			DB		'ASTART FINISHED!'
-  F5F0  0D            			DB		0DH
+  F5EE                	MSG_AS:
+  F5EE  41535441525420			DB		'ASTART FINISHED!'
+  F5FE  0D            			DB		0DH
                       			
-  F5F1                	MSG_ST:
-  F5F1  50415443484544			DB		'PATCHED MONITOR START!'
-  F607  0D            			DB		0DH
+  F5FF                	MSG_ST:
+  F5FF  50415443484544			DB		'PATCHED MONITOR START!'
+  F615  0D            			DB		0DH
                       			
-  F608                	MSG_AD:
-  F608  41444452455353			DB		'ADDRESS FAILED!'
-  F617  0D            			DB		0DH
+  F616                	MSG_AD:
+  F616  41444452455353			DB		'ADDRESS FAILED!'
+  F625  0D            			DB		0DH
                       			
-  F618                	MSG_FNAME:
-  F618  46494C45204E41			DB		'FILE NAME FAILED!'
-  F629  0D            			DB		0DH
+  F626                	MSG_FNAME:
+  F626  46494C45204E41			DB		'FILE NAME FAILED!'
+  F637  0D            			DB		0DH
                       			
-  F62A                	MSG_CMD:
-  F62A  434F4D4D414E44			DB		'COMMAND FAILED!'
-  F639  0D            			DB		0DH
+  F638                	MSG_CMD:
+  F638  434F4D4D414E44			DB		'COMMAND FAILED!'
+  F647  0D            			DB		0DH
                       			
-  F63A                	MSG_F0:
-  F63A  53442D43415244			DB		'SD-CARD INITIALIZE ERROR'
-  F652  0D            			DB		0DH
-                      			
-  F653                	MSG_F1:
-  F653  4E4F542046494E			DB		'NOT FIND FILE'
+  F648                	MSG_F0:
+  F648  53442D43415244			DB		'SD-CARD INITIALIZE ERROR'
   F660  0D            			DB		0DH
+                      			
+  F661                	MSG_F1:
+  F661  4E4F542046494E			DB		'NOT FIND FILE'
+  F66E  0D            			DB		0DH
                       			
                       	;MSG_F2:
                       	;		DB		'NOT OBJECT FILE'
                       	;		DB		0DH
                       			
-  F661                	MSG_F3:
-  F661  46494C45204558			DB		'FILE EXIST'
-  F66B  0D            			DB		0DH
+  F66F                	MSG_F3:
+  F66F  46494C45204558			DB		'FILE EXIST'
+  F679  0D            			DB		0DH
                       			
-  F66C                	MSG_KEY1:
-  F66C  4E4558543A414E			DB		'NEXT:ANY BACK:B BREAK:'
-  F682  0D            			DB		0DH
-  F683                	MSG_KEY2:
-  F683  204F5220534849			DB		' OR SHIFT+BREAK'
-  F692  0D            			DB		0DH
+  F67A                	MSG_KEY1:
+  F67A  4E4558543A414E			DB		'NEXT:ANY BACK:B BREAK:'
+  F690  0D            			DB		0DH
+  F691                	MSG_KEY2:
+  F691  204F5220534849			DB		' OR SHIFT+BREAK'
+  F6A0  0D            			DB		0DH
                       			
-  F693                	MSG_DELQ:
-  F693  46494C45204445			DB		'FILE DELETE?(Y:OK ELSE:CANSEL)'
-  F6B1  0D            			DB		0DH
+  F6A1                	MSG_DELQ:
+  F6A1  46494C45204445			DB		'FILE DELETE?(Y:OK ELSE:CANSEL)'
+  F6BF  0D            			DB		0DH
                       			
-  F6B2                	MSG_DELY:
-  F6B2  44454C45544520			DB		'DELETE OK'
-  F6BB  0D            			DB		0DH
-                      			
-  F6BC                	MSG_DELN:
-  F6BC  44454C45544520			DB		'DELETE CANSEL'
+  F6C0                	MSG_DELY:
+  F6C0  44454C45544520			DB		'DELETE OK'
   F6C9  0D            			DB		0DH
                       			
-  F6CA                	MSG_REN:
-  F6CA  4E4557204E414D			DB		'NEW NAME:                            '
-  F6EF  0D            			DB		0DH
+  F6CA                	MSG_DELN:
+  F6CA  44454C45544520			DB		'DELETE CANSEL'
+  F6D7  0D            			DB		0DH
                       			
-  F6F0                	MSG_DNAME:
-  F6F0  444F532046494C			DB		'DOS FILE:                            '
-  F715  0D            			DB		0DH
+  F6D8                	MSG_REN:
+  F6D8  4E4557204E414D			DB		'NEW NAME:                            '
+  F6FD  0D            			DB		0DH
                       			
-  F716                	MSG_RENY:
-  F716  52454E414D4520			DB		'RENAME OK'
-  F71F  0D            			DB		0DH
+  F6FE                	MSG_DNAME:
+  F6FE  444F532046494C			DB		'DOS FILE:'
+  F707                	MSG_DNAMEEND:
+  F707  20202020202020			DB		'                            '
+  F723  0D            			DB		0DH
                       			
-  F720                	MSG_AD1:
-  F720  41445253202B30			DB		'ADRS +0 +1 +2 +3 +4 +5 +6 +7 01234567'
-  F745  0D            			DB		0DH
+  F724                	MSG_RENY:
+  F724  52454E414D4520			DB		'RENAME OK'
+  F72D  0D            			DB		0DH
                       			
-  F746                	MSG_AD2:
-  F746  4E4558543A414E			DB		'NEXT:ANY BACK:B BREAK:SHIFT+BREAK'
-  F767  0D            			DB		0DH
+  F72E                	MSG_AD1:
+  F72E  41445253202B30			DB		'ADRS +0 +1 +2 +3 +4 +5 +6 +7 01234567'
+  F753  0D            			DB		0DH
                       			
-  F768                	MSG_CPY:
-  F768  434F5059204F4B			DB		'COPY OK'
-  F76F  0D            			DB		0DH
-                      			
-  F770                	MSG_FDW:
-  F770  2A46445720    			DB		'*FDW '
+  F754                	MSG_AD2:
+  F754  4E4558543A414E			DB		'NEXT:ANY BACK:B BREAK:SHIFT+BREAK'
   F775  0D            			DB		0DH
-                      	
-  F776                	MSG99:
-  F776  204552524F52  			DB		' ERROR'
-  F77C  0D            			DB		0DH
                       			
-  F77D                	DEFNAME:
-  F77D  30303030      			DB		'0000'
-  F781  0D            			DB		0DH
-  F782                	NEND:
+  F776                	MSG_CPY:
+  F776  434F5059204F4B			DB		'COPY OK'
+  F77D  0D            			DB		0DH
+                      			
+  F77E                	MSG_FDW:
+  F77E  2A46445720    			DB		'*FDW '
+  F783  0D            			DB		0DH
                       	
-  F782                	DEFDIR:
-  F782  2A46442020    			DB		'*FD  '
-  F787                	DEND:
+  F784                	MSG99:
+  F784  204552524F52  			DB		' ERROR'
+  F78A  0D            			DB		0DH
+                      			
+  F78B                	DEFNAME:
+  F78B  30303030      			DB		'0000'
+  F78F  0D            			DB		0DH
+  F790                	NEND:
+                      	
+  F790                	DEFDIR:
+  F790  2A46442020    			DB		'*FD  '
+  F795                	DEND:
                       	
                       	;*********************** 0436H MONITOR ライト インフォメーション代替処理 ************
-  F787                	MSHED:
-  F787  D5            			PUSH	DE
-  F788  C5            			PUSH	BC
-  F789  E5            			PUSH	HL
-  F78A  CD82F0        			CALL	INIT
-  F78D  3E91          			LD		A,91H      ;HEADER SAVEコマンド91H
-  F78F  CDBDF8        			CALL	MCMD       ;コマンドコード送信
-  F792  A7            			AND		A          ;00以外ならERROR
-  F793  C2C9F8        			JP		NZ,MERR
+  F795                	MSHED:
+  F795  D5            			PUSH	DE
+  F796  C5            			PUSH	BC
+  F797  E5            			PUSH	HL
+  F798  CD82F0        			CALL	INIT
+  F79B  3E91          			LD		A,91H      ;HEADER SAVEコマンド91H
+  F79D  CD21F9        			CALL	MCMD       ;コマンドコード送信
+  F7A0  A7            			AND		A          ;00以外ならERROR
+  F7A1  C22DF9        			JP		NZ,MERR
                       	
                       	;S-OS SWORD、8080用テキスト・エディタ＆アセンブラはファイルネームの後ろが20h詰めとなるため0dhに修正
-  F796  0611          			LD		B,11H
-  F798  210111        			LD		HL,FNAME+10H     ;ファイルネーム
-  F79B  3E0D          			LD		A,0DH            ;17文字目には常に0DHをセットする
-  F79D  77            			LD		(HL),A
-  F79E  7E            	MSH0:	LD		A,(HL)
-  F79F  FE0D          			CP		0DH              ;0DHであればひとつ前の文字の検査に移る
-  F7A1  2807          			JR		Z,MSH1
-  F7A3  FE20          			CP		20H              ;20Hであれば0DHをセットしてひとつ前の文字の検査に移る
-  F7A5  2007          			JR		NZ,MSH2          ;0DH、20H以外の文字であれば終了
-  F7A7  3E0D          			LD		A,0DH
-  F7A9  77            			LD		(HL),A
+  F7A4  0611          			LD		B,11H
+  F7A6  210111        			LD		HL,FNAME+10H     ;ファイルネーム
+  F7A9  3E0D          			LD		A,0DH            ;17文字目には常に0DHをセットする
+  F7AB  77            			LD		(HL),A
+  F7AC  7E            	MSH0:	LD		A,(HL)
+  F7AD  FE0D          			CP		0DH              ;0DHであればひとつ前の文字の検査に移る
+  F7AF  2807          			JR		Z,MSH1
+  F7B1  FE20          			CP		20H              ;20Hであれば0DHをセットしてひとつ前の文字の検査に移る
+  F7B3  2007          			JR		NZ,MSH2          ;0DH、20H以外の文字であれば終了
+  F7B5  3E0D          			LD		A,0DH
+  F7B7  77            			LD		(HL),A
                       			
-  F7AA  2B            	MSH1:	DEC		HL
-  F7AB  05            			DEC		B
-  F7AC  20F0          			JR		NZ,MSH0
+  F7B8  2B            	MSH1:	DEC		HL
+  F7B9  05            			DEC		B
+  F7BA  20F0          			JR		NZ,MSH0
                       	
-  F7AE  CD0600        	MSH2:	CALL	LETLN
-  F7B1  11C8F5        			LD		DE,WRMSG   ;'WRITING '
-  F7B4  CD1500        			CALL	MSGPR        ;メッセージ表示
-  F7B7  11F110        			LD		DE,FNAME     ;ファイルネーム
-  F7BA  CD1500        			CALL	MSGPR       ;メッセージ表示
+  F7BC  CD0600        	MSH2:	CALL	LETLN
+  F7BF  11D6F5        			LD		DE,WRMSG   ;'WRITING '
+  F7C2  CD1500        			CALL	MSGPR        ;メッセージ表示
+  F7C5  11F110        			LD		DE,FNAME     ;ファイルネーム
+  F7C8  CD1500        			CALL	MSGPR       ;メッセージ表示
                       	
-  F7BD  21F010        			LD		HL,IBUFE
-  F7C0  0680          			LD		B,80H
-  F7C2  7E            	MSH3:	LD		A,(HL)     ;インフォメーション ブロック送信
-  F7C3  CD51F5        			CALL	SNDBYTE
-  F7C6  23            			INC		HL
-  F7C7  05            			DEC		B
-  F7C8  20F8          			JR		NZ,MSH3
+  F7CB  21F010        			LD		HL,IBUFE
+  F7CE  0680          			LD		B,80H
+  F7D0  7E            	MSH3:	LD		A,(HL)     ;インフォメーション ブロック送信
+  F7D1  CD5FF5        			CALL	SNDBYTE
+  F7D4  23            			INC		HL
+  F7D5  05            			DEC		B
+  F7D6  20F8          			JR		NZ,MSH3
                       	
-  F7CA  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F7CD  A7            			AND		A          ;00以外ならERROR
-  F7CE  C2C9F8        			JP		NZ,MERR
+  F7D8  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F7DB  A7            			AND		A          ;00以外ならERROR
+  F7DC  C22DF9        			JP		NZ,MERR
                       	
-  F7D1  C3C4F8        			JP		MRET       ;正常RETURN
+  F7DF  C328F9        			JP		MRET       ;正常RETURN
                       	
                       	;******************** 0475H MONITOR ライト データ代替処理 **********************
-  F7D4                	MSDAT:
-  F7D4  D5            			PUSH	DE
-  F7D5  C5            			PUSH	BC
-  F7D6  E5            			PUSH	HL
-  F7D7  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
-  F7D9  CDBDF8        			CALL	MCMD       ;コマンドコード送信
-  F7DC  A7            			AND		A          ;00以外ならERROR
-  F7DD  C2C9F8        			JP		NZ,MERR
+  F7E2                	MSDAT:
+  F7E2  D5            			PUSH	DE
+  F7E3  C5            			PUSH	BC
+  F7E4  E5            			PUSH	HL
+  F7E5  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
+  F7E7  CD21F9        			CALL	MCMD       ;コマンドコード送信
+  F7EA  A7            			AND		A          ;00以外ならERROR
+  F7EB  C22DF9        			JP		NZ,MERR
                       	
-  F7E0  210211        			LD		HL,FSIZE   ;FSIZE送信
-  F7E3  7E            			LD		A,(HL)
-  F7E4  CD51F5        			CALL	SNDBYTE
-  F7E7  23            			INC		HL
-  F7E8  7E            			LD		A,(HL)
-  F7E9  CD51F5        			CALL	SNDBYTE
+  F7EE  210211        			LD		HL,FSIZE   ;FSIZE送信
+  F7F1  7E            			LD		A,(HL)
+  F7F2  CD5FF5        			CALL	SNDBYTE
+  F7F5  23            			INC		HL
+  F7F6  7E            			LD		A,(HL)
+  F7F7  CD5FF5        			CALL	SNDBYTE
                       	
-  F7EC  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F7EF  A7            			AND		A          ;00以外ならERROR
-  F7F0  C2C9F8        			JP		NZ,MERR
+  F7FA  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F7FD  A7            			AND		A          ;00以外ならERROR
+  F7FE  C22DF9        			JP		NZ,MERR
                       	
-  F7F3  ED5B0211      			LD		DE,(FSIZE)
-  F7F7  2A0411        			LD		HL,(SADRS)
-  F7FA  7E            	MSD1:	LD		A,(HL)
-  F7FB  CD51F5        			CALL	SNDBYTE      ;SADRSからFSIZE Byteを送信。分割セーブの場合、直前に0436HでOPENされたファイルを対象として256バイトずつ0475HがCALLされる。
-  F7FE  1B            			DEC		DE
-  F7FF  7A            			LD		A,D
-  F800  B3            			OR		E
-  F801  23            			INC		HL
-  F802  20F6          			JR		NZ,MSD1
+  F801  ED5B0211      			LD		DE,(FSIZE)
+  F805  2A0411        			LD		HL,(SADRS)
+  F808  7E            	MSD1:	LD		A,(HL)
+  F809  CD5FF5        			CALL	SNDBYTE      ;SADRSからFSIZE Byteを送信。分割セーブの場合、直前に0436HでOPENされたファイルを対象として256バイトずつ0475HがCALLされる。
+  F80C  1B            			DEC		DE
+  F80D  7A            			LD		A,D
+  F80E  B3            			OR		E
+  F80F  23            			INC		HL
+  F810  20F6          			JR		NZ,MSD1
                       			
-  F804  C3C4F8        			JP		MRET       ;正常RETURN
+  F812  C328F9        			JP		MRET       ;正常RETURN
                       	
                       	;************************** 04D8H MONITOR リード インフォメーション代替処理 *****************
-  F807                	MLHED:
-  F807  D5            			PUSH	DE
-  F808  C5            			PUSH	BC
-  F809  E5            			PUSH	HL
-  F80A  CD82F0        			CALL	INIT
+  F815                	MLHED:
+  F815  D5            			PUSH	DE
+  F816  C5            			PUSH	BC
+  F817  E5            			PUSH	HL
+  F818  CD82F0        			CALL	INIT
                       	
-  F80D  3E00          			LD		A,00H
-  F80F  110000        			LD		DE,0000H
-  F812  CD3300        			CALL	TIMST
+  F81B  3E00          			LD		A,00H
+  F81D  110000        			LD		DE,0000H
+  F820  CD3300        			CALL	TIMST
                       	
-  F815  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
-  F817  CDBDF8        			CALL	MCMD       ;コマンドコード送信
-  F81A  A7            			AND		A          ;00以外ならERROR
-  F81B  C2C9F8        			JP		NZ,MERR
+  F823  0608          			LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
+  F825  11A311        			LD		DE,LBUF
+  F828  3E0D          			LD		A,0DH
+  F82A  12            	MLH0:	LD		(DE),A
+  F82B  13            			INC		DE
+  F82C  05            			DEC		B
+  F82D  20FB          			JR		NZ,MLH0
                       	
-  F81E  0608          			LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
-  F820  11A311        			LD		DE,LBUF
-  F823  3E0D          			LD		A,0DH
-  F825  12            	MLH0:	LD		(DE),A
-  F826  13            			INC		DE
-  F827  05            			DEC		B
-  F828  20FB          			JR		NZ,MLH0
+  F82F  3E03          			LD		A,03H          ;一行分をクリアするため3文字削除、37文字出力
+  F831  327111        			LD		(DSPX),A
+  F834  3EC7          			LD		A,0C7H
+  F836  CDDC0D        			CALL	DPCT
+  F839  CDDC0D        			CALL	DPCT
+  F83C  CDDC0D        			CALL	DPCT
+  F83F  11FEF6        	MLH6:	LD		DE,MSG_DNAME   ;'DOS FILE:'
+  F842  CD1500        			CALL	MSGPR
+  F845  3E09          			LD		A,09H          ;カーソルを9文字目に戻す
+  F847  327111        			LD		(DSPX),A
                       	
-  F82A  3E03          			LD		A,03H          ;一行分をクリアするため3文字削除、37文字出力
-  F82C  327111        			LD		(DSPX),A
-  F82F  3EC7          			LD		A,0C7H
-  F831  CDDC0D        			CALL	DPCT
-  F834  CDDC0D        			CALL	DPCT
-  F837  CDDC0D        			CALL	DPCT
-  F83A  11F0F6        			LD		DE,MSG_DNAME   ;'DOS FILE:'
-  F83D  CD1500        			CALL	MSGPR
-  F840  3E09          			LD		A,09H          ;カーソルを9文字目に戻す
-  F842  327111        			LD		(DSPX),A
-                      	
-  F845  11AE11        			LD		DE,MBUF    ;ファイルネームを指示するための苦肉の策。LOADコマンドとしてはファイルネームなしとして改行したのちに行バッファの位置をずらしてDOSファイルネームを入力する。
-  F848  CD0300        			CALL	GETL
+  F84A  11AE11        			LD		DE,MBUF    ;ファイルネームを指示するための苦肉の策。LOADコマンドとしてはファイルネームなしとして改行したのちに行バッファの位置をずらしてDOSファイルネームを入力する。
+  F84D  CD0300        			CALL	GETL
                       			
-  F84B  11B711        			LD		DE,MBUF+9
-                      	;		LD		DE,MBUF
-  F84E                	MLH1:
-  F84E  1A            			LD		A,(DE)
-  F84F  FE20          			CP		20H                 ;行頭のスペースをファイルネームまで読み飛ばし
-  F851  2003          			JR		NZ,MLH2
-  F853  13            			INC		DE
-  F854  18F8          			JR		MLH1
-                      	
-  F856  0620          	MLH2:	LD		B,20H
-  F858  1A            	MLH4:	LD		A,(DE)     ;FNAME送信
-  F859  CD51F5        			CALL	SNDBYTE
-  F85C  13            			INC		DE
-  F85D  05            			DEC		B
-  F85E  20F8          			JR		NZ,MLH4
-  F860  3E0D          			LD		A,0DH
-  F862  CD51F5        			CALL	SNDBYTE
+  F850  11B711        			LD		DE,MBUF+9
                       			
-  F865  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F868  A7            			AND		A          ;00以外ならERROR
-  F869  C2C9F8        			JP		NZ,MERR
+  F853  1A            			LD		A,(DE)
+                      	;**** ファイルネームの先頭が'*'なら拡張コマンド処理へ移行 ****
+  F854  FE2A          			CP		'*'
+  F856  2845          			JR		Z,MLHCMD
                       	
-  F86C  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F86F  A7            			AND		A          ;00以外ならERROR
-  F870  C2C9F8        			JP		NZ,MERR
+  F858  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
+  F85A  CD21F9        			CALL	MCMD       ;コマンドコード送信
+  F85D  A7            			AND		A          ;00以外ならERROR
+  F85E  C22DF9        			JP		NZ,MERR
                       	
-  F873  21F010        			LD		HL,IBUFE
-  F876  0680          			LD		B,80H
-  F878  CD3EF5        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
-  F87B  77            			LD		(HL),A
-  F87C  23            			INC		HL
-  F87D  05            			DEC		B
-  F87E  20F8          			JR		NZ,MLH5
+  F861                	MLH1:
+  F861  1A            			LD		A,(DE)
+  F862  FE20          			CP		20H                 ;行頭のスペースをファイルネームまで読み飛ばし
+  F864  2003          			JR		NZ,MLH2
+  F866  13            			INC		DE
+  F867  18F8          			JR		MLH1
                       	
-  F880  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F883  A7            			AND		A          ;00以外ならERROR
-  F884  C2C9F8        			JP		NZ,MERR
+  F869  0620          	MLH2:	LD		B,20H
+  F86B  1A            	MLH4:	LD		A,(DE)     ;FNAME送信
+  F86C  CD5FF5        			CALL	SNDBYTE
+  F86F  13            			INC		DE
+  F870  05            			DEC		B
+  F871  20F8          			JR		NZ,MLH4
+  F873  3E0D          			LD		A,0DH
+  F875  CD5FF5        			CALL	SNDBYTE
+                      			
+  F878  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F87B  A7            			AND		A          ;00以外ならERROR
+  F87C  C22DF9        			JP		NZ,MERR
                       	
-  F887  183B          			JR		MRET       ;正常RETURN
+  F87F  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F882  A7            			AND		A          ;00以外ならERROR
+  F883  C22DF9        			JP		NZ,MERR
+                      	
+  F886  21F010        			LD		HL,IBUFE
+  F889  0680          			LD		B,80H
+  F88B  CD4CF5        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
+  F88E  77            			LD		(HL),A
+  F88F  23            			INC		HL
+  F890  05            			DEC		B
+  F891  20F8          			JR		NZ,MLH5
+                      	
+  F893  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F896  A7            			AND		A          ;00以外ならERROR
+  F897  C22DF9        			JP		NZ,MERR
+                      	
+  F89A  C328F9        			JP		MRET       ;正常RETURN
+                      	
+                      	;**************************** アプリケーション内SD-CARD操作処理 **********************
+  F89D                	MLHCMD:
+                      	;**** HL、DE、BCレジスタを保存 ****
+  F89D  E5            			PUSH	HL
+  F89E  D5            			PUSH	DE
+  F89F  C5            			PUSH	BC
+  F8A0  13            			INC		DE
+  F8A1  0603          			LD		B,03H
+                      	;**** FDLコマンド ****
+  F8A3  21E9F8        			LD		HL,CMD1
+  F8A6  CD8001        			CALL	CMPSTR
+  F8A9  2805          			JR		Z,MLHCMD2
+  F8AB  C1            			POP		BC
+  F8AC  D1            			POP		DE
+  F8AD  E1            			POP		HL
+                      	;**** ファイルネーム入力へ復帰 ****
+  F8AE  188F          			JR		MLH6
+                      	
+  F8B0                	MLHCMD2:
+  F8B0  13            			INC		DE
+  F8B1  13            			INC		DE
+  F8B2  13            			INC		DE
+  F8B3  21FEF6        			LD		HL,MSG_DNAME         ;行頭に'DOS FILE:'を付けることでカーソルを移動させリターンで実行できるように
+  F8B6  010900        			LD		BC,MSG_DNAMEEND-MSG_DNAME
+                      	;**** FDLコマンド呼び出し ****
+  F8B9  CD2EF2        			CALL	DIRLIST
+  F8BC  A7            			AND		A          ;00以外ならERROR
+  F8BD  2006          			JR		NZ,SERR
+  F8BF  C1            			POP		BC
+  F8C0  D1            			POP		DE
+  F8C1  E1            			POP		HL
+                      	;**** ファイルネーム入力へ復帰 ****
+  F8C2  C33FF8        			JP		MLH6
+                      	
+                      	;******* アプリケーション内SD-CARD操作処理用ERROR処理 **************
+  F8C5                	SERR:
+  F8C5  FEF0          			CP		0F0H
+  F8C7  2005          			JR		NZ,SERR3
+  F8C9  1148F6        			LD		DE,MSG_F0
+  F8CC  180F          			JR		SERRMSG
+                      			
+  F8CE  FEF1          	SERR3:	CP		0F1H
+  F8D0  2005          			JR		NZ,SERR99
+  F8D2  1161F6        			LD		DE,MSG_F1
+  F8D5  1806          			JR		SERRMSG
+                      			
+  F8D7  CDC303        	SERR99:	CALL	PRTBYT
+  F8DA  1184F7        			LD		DE,MSG99
+                      			
+  F8DD                	SERRMSG:
+  F8DD  CD1500        			CALL	MSGPR
+  F8E0  CD0600        			CALL	LETLN
+  F8E3  C1            			POP		BC
+  F8E4  D1            			POP		DE
+  F8E5  E1            			POP		HL
+                      	;**** ファイルネーム入力へ復帰 ****
+  F8E6  C33FF8        			JP		MLH6
+                      	
+                      	;**** コマンドリスト ****
+                      	; 将来拡張用
+  F8E9  46444C0D      	CMD1:	DB		'FDL',0DH
+                      	
                       	
                       	;**************************** 04F8H MONITOR リード データ代替処理 ********************
-  F889                	MLDAT:
-  F889  D5            			PUSH	DE
-  F88A  C5            			PUSH	BC
-  F88B  E5            			PUSH	HL
-  F88C  3E94          			LD		A,94H      ;DATA LOADコマンド94H
-  F88E  CDBDF8        			CALL	MCMD       ;コマンドコード送信
-  F891  A7            			AND		A          ;00以外ならERROR
-  F892  C2C9F8        			JP		NZ,MERR
+  F8ED                	MLDAT:
+  F8ED  D5            			PUSH	DE
+  F8EE  C5            			PUSH	BC
+  F8EF  E5            			PUSH	HL
+  F8F0  3E94          			LD		A,94H      ;DATA LOADコマンド94H
+  F8F2  CD21F9        			CALL	MCMD       ;コマンドコード送信
+  F8F5  A7            			AND		A          ;00以外ならERROR
+  F8F6  C22DF9        			JP		NZ,MERR
                       	
-  F895  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F898  A7            			AND		A          ;00以外ならERROR
-  F899  C2C9F8        			JP		NZ,MERR
+  F8F9  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F8FC  A7            			AND		A          ;00以外ならERROR
+  F8FD  C22DF9        			JP		NZ,MERR
                       	
-  F89C  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F89F  A7            			AND		A          ;00以外ならERROR
-  F8A0  C2C9F8        			JP		NZ,MERR
+  F900  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F903  A7            			AND		A          ;00以外ならERROR
+  F904  C22DF9        			JP		NZ,MERR
                       	
-  F8A3  110211        			LD		DE,FSIZE   ;FSIZE送信
-  F8A6  1A            			LD		A,(DE)
-  F8A7  CD51F5        			CALL	SNDBYTE
-  F8AA  13            			INC		DE
-  F8AB  1A            			LD		A,(DE)
-  F8AC  CD51F5        			CALL	SNDBYTE
-  F8AF  CDEDF0        			CALL	DBRCV      ;FSIZE分のデータを受信し、SADRSから格納。分割ロードの場合、直前に0436HでOPENされたファイルを対象として256バイトずつSADRSが加算されて04F8HがCALLされる。
+  F907  110211        			LD		DE,FSIZE   ;FSIZE送信
+  F90A  1A            			LD		A,(DE)
+  F90B  CD5FF5        			CALL	SNDBYTE
+  F90E  13            			INC		DE
+  F90F  1A            			LD		A,(DE)
+  F910  CD5FF5        			CALL	SNDBYTE
+  F913  CDEDF0        			CALL	DBRCV      ;FSIZE分のデータを受信し、SADRSから格納。分割ロードの場合、直前に0436HでOPENされたファイルを対象として256バイトずつSADRSが加算されて04F8HがCALLされる。
                       	
-  F8B2  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F8B5  A7            			AND		A          ;00以外ならERROR
-  F8B6  C2C9F8        			JP		NZ,MERR
+  F916  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F919  A7            			AND		A          ;00以外ならERROR
+  F91A  C22DF9        			JP		NZ,MERR
                       	
-  F8B9  1809          			JR		MRET       ;正常RETURN
+  F91D  1809          			JR		MRET       ;正常RETURN
                       	
                       	;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
-  F8BB  AF            	MVRFY:	XOR		A          ;正常終了フラグ
+  F91F  AF            	MVRFY:	XOR		A          ;正常終了フラグ
                       	;		EI
                       	
-  F8BC  C9            			RET
+  F920  C9            			RET
                       	
                       	;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
-  F8BD                	MCMD:
+  F921                	MCMD:
                       	;		PUSH	AF
                       	;		CALL	INIT
                       	;		POP		AF
-  F8BD  CD51F5        			CALL	SNDBYTE    ;コマンドコード送信
-  F8C0  CD3EF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
-  F8C3  C9            			RET
+  F921  CD5FF5        			CALL	SNDBYTE    ;コマンドコード送信
+  F924  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F927  C9            			RET
                       	
                       	;****** 代替処理用正常RETURN処理 **********
-  F8C4  E1            	MRET:	POP		HL
-  F8C5  C1            			POP		BC
-  F8C6  D1            			POP		DE
-  F8C7  AF            			XOR		A          ;正常終了フラグ
+  F928  E1            	MRET:	POP		HL
+  F929  C1            			POP		BC
+  F92A  D1            			POP		DE
+  F92B  AF            			XOR		A          ;正常終了フラグ
                       	;		EI
                       			
-  F8C8  C9            			RET
+  F92C  C9            			RET
                       	
                       	;******* 代替処理用ERROR処理 **************
-  F8C9                	MERR:
-  F8C9  FEF0          			CP		0F0H
-  F8CB  2005          			JR		NZ,MERR3
-  F8CD  113AF6        			LD		DE,MSG_F0
-  F8D0  180F          			JR		MERRMSG
+  F92D                	MERR:
+  F92D  FEF0          			CP		0F0H
+  F92F  2005          			JR		NZ,MERR3
+  F931  1148F6        			LD		DE,MSG_F0
+  F934  180F          			JR		MERRMSG
                       	;代替処理ではファイル種類コードの判別なし
                       	;MERR2:	CP		0F2H
                       	;		JR		NZ,MERR3
                       	;		LD		DE,MSG_F2
                       	;		JR		MERRMSG
                       			
-  F8D2  FEF1          	MERR3:	CP		0F1H
-  F8D4  2005          			JR		NZ,MERR99
-  F8D6  1153F6        			LD		DE,MSG_F1
-  F8D9  1806          			JR		MERRMSG
+  F936  FEF1          	MERR3:	CP		0F1H
+  F938  2005          			JR		NZ,MERR99
+  F93A  1161F6        			LD		DE,MSG_F1
+  F93D  1806          			JR		MERRMSG
                       			
-  F8DB  CDC303        	MERR99:	CALL	PRTBYT
-  F8DE  1176F7        			LD		DE,MSG99
+  F93F  CDC303        	MERR99:	CALL	PRTBYT
+  F942  1184F7        			LD		DE,MSG99
                       			
-  F8E1                	MERRMSG:
-  F8E1  CD1500        			CALL	MSGPR
-  F8E4  CD0600        			CALL	LETLN
-  F8E7  E1            			POP		HL
-  F8E8  C1            			POP		BC
-  F8E9  D1            			POP		DE
-  F8EA  3E02          			LD		A,02H
-  F8EC  37            			SCF
+  F945                	MERRMSG:
+  F945  CD1500        			CALL	MSGPR
+  F948  CD0600        			CALL	LETLN
+  F94B  E1            			POP		HL
+  F94C  C1            			POP		BC
+  F94D  D1            			POP		DE
+  F94E  3E02          			LD		A,02H
+  F950  37            			SCF
                       	;		EI
                       	
-  F8ED  C9            			RET
+  F951  C9            			RET
                       	
-  F8EE                			END
+  F952                			END
 

@@ -8,6 +8,8 @@
 ;2022. 1.31 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭一文字を比較して一致したものだけを出力
 ;           Bキーで前の20件を表示
 ;2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
+;2022. 2.10 04D8H MONITOR リード インフォメーション代替処理の中からFDLコマンドを使えるように修正
+;           FDLコマンド処理をサブルーチン化
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -17,6 +19,7 @@ MSGPR		EQU		0015H
 PLIST		EQU		0018H
 GETKEY		EQU		001BH
 TIMST		EQU		0033H
+CMPSTR		EQU		0180H
 PRTWRD		EQU		03BAH
 PRTBYT		EQU		03C3H
 HLHEX		EQU		0410H
@@ -362,23 +365,26 @@ STAS:	LD		A,82H      ;AUTO START SETコマンド82H
 		LD		DE,MSG_AS
 		JP		ERRMSG
 
+
 ;**** DIRLIST ****
 STLT:	INC		DE
-;		LD		A,(DE)
-;		CP		0DH
-;		JR		NZ,STLT1
-;		LD		A,30H
-;		LD		A,20H
-;		JR		DIRLIST    ;FDLだけなら'20H'を送信(全ファイルを表示)
-;STLT1:	INC		DE         ;FDLの後に数字一文字があれば'31H'～'39H','41H'～'5AH'を送信(20件を1ページとしてnページを表示)
-;		LD		A,(DE)
+		LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
+		LD		BC,DEND-DEFDIR
+		CALL	DIRLIST
+		AND		A                 ;00以外ならERROR
+		JP		NZ,SVERR
+		JP		MON
+
+
+;**** DIRLIST本体 (HL=行頭に付加する文字列の先頭アドレス BC=行頭に付加する文字列の長さ) ****
+;****              戻り値 A=エラーコード ****
 DIRLIST:
-;		PUSH	AF
 		LD		A,83H      ;DIRLISTコマンド83Hを送信
 		CALL	STCD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
-		JP		NZ,SVERR
-;		POP		AF
+		JP		NZ,DLRET
+		
+		PUSH	BC
 		LD		B,21H
 STLT1:	LD		A,(DE)
 		CP		0DH
@@ -388,9 +394,13 @@ STLT2:	CALL	SNDBYTE           ;ページ指示を送信
 		INC		DE
 		DEC		B
 		JR		NZ,STLT1
-DL1:	LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
+		POP		BC
+DL1:
+		PUSH	HL
+		PUSH	BC
+;		LD		HL,DEFDIR         ;行頭に'*FD 'を付けることでカーソルを移動させリターンで実行できるように
 		LD		DE,LBUF
-		LD		BC,DEND-DEFDIR
+;		LD		BC,DEND-DEFDIR
 		LDIR
 		EX		DE,HL
 DL2:	CALL	RCVBYTE           ;'00H'を受信するまでを一行とする
@@ -406,11 +416,13 @@ DL2:	CALL	RCVBYTE           ;'00H'を受信するまでを一行とする
 DL3:	LD		DE,LBUF           ;'00H'を受信したら一行分を表示して改行
 		CALL	MSGPR
 		CALL	LETLN
+		POP		BC
+		POP		HL
 		JR		DL1
 DL4:	CALL	RCVBYTE           ;状態取得(00H=OK)
-		AND		A                 ;00以外ならERROR
-		JP		NZ,SVERR
-		JP		MON
+		POP		BC
+		POP		HL
+		JR		DLRET
 
 DL5:	LD		DE,MSG_KEY1        ;HIT ANT KEY表示
 		CALL	MSGPR
@@ -438,6 +450,10 @@ DL7:	LD		A,0FFH            ;0FFH中断コードを送信
 DL8:	CALL	SNDBYTE
 		CALL	LETLN
 		JR		DL2
+		
+DLRET:		
+		RET
+		
 
 ;**** FILE DELETE ****
 STDE:	LD		A,84H      ;FILE DELETEコマンド84H
@@ -937,7 +953,9 @@ MSG_REN:
 		DB		0DH
 		
 MSG_DNAME:
-		DB		'DOS FILE:                            '
+		DB		'DOS FILE:'
+MSG_DNAMEEND:
+		DB		'                            '
 		DB		0DH
 		
 MSG_RENY:
@@ -1065,11 +1083,6 @@ MLHED:
 		LD		DE,0000H
 		CALL	TIMST
 
-		LD		A,93H      ;HEADER LOADコマンド93H
-		CALL	MCMD       ;コマンドコード送信
-		AND		A          ;00以外ならERROR
-		JP		NZ,MERR
-
 		LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
 		LD		DE,LBUF
 		LD		A,0DH
@@ -1084,7 +1097,7 @@ MLH0:	LD		(DE),A
 		CALL	DPCT
 		CALL	DPCT
 		CALL	DPCT
-		LD		DE,MSG_DNAME   ;'DOS FILE:'
+MLH6:	LD		DE,MSG_DNAME   ;'DOS FILE:'
 		CALL	MSGPR
 		LD		A,09H          ;カーソルを9文字目に戻す
 		LD		(DSPX),A
@@ -1093,7 +1106,17 @@ MLH0:	LD		(DE),A
 		CALL	GETL
 		
 		LD		DE,MBUF+9
-;		LD		DE,MBUF
+		
+		LD		A,(DE)
+;**** ファイルネームの先頭が'*'なら拡張コマンド処理へ移行 ****
+		CP		'*'
+		JR		Z,MLHCMD
+
+		LD		A,93H      ;HEADER LOADコマンド93H
+		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
+
 MLH1:
 		LD		A,(DE)
 		CP		20H                 ;行頭のスペースをファイルネームまで読み飛ばし
@@ -1130,7 +1153,70 @@ MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
 		AND		A          ;00以外ならERROR
 		JP		NZ,MERR
 
-		JR		MRET       ;正常RETURN
+		JP		MRET       ;正常RETURN
+
+;**************************** アプリケーション内SD-CARD操作処理 **********************
+MLHCMD:
+;**** HL、DE、BCレジスタを保存 ****
+		PUSH	HL
+		PUSH	DE
+		PUSH	BC
+		INC		DE
+		LD		B,03H
+;**** FDLコマンド ****
+		LD		HL,CMD1
+		CALL	CMPSTR
+		JR		Z,MLHCMD2
+		POP		BC
+		POP		DE
+		POP		HL
+;**** ファイルネーム入力へ復帰 ****
+		JR		MLH6
+
+MLHCMD2:
+		INC		DE
+		INC		DE
+		INC		DE
+		LD		HL,MSG_DNAME         ;行頭に'DOS FILE:'を付けることでカーソルを移動させリターンで実行できるように
+		LD		BC,MSG_DNAMEEND-MSG_DNAME
+;**** FDLコマンド呼び出し ****
+		CALL	DIRLIST
+		AND		A          ;00以外ならERROR
+		JR		NZ,SERR
+		POP		BC
+		POP		DE
+		POP		HL
+;**** ファイルネーム入力へ復帰 ****
+		JP		MLH6
+
+;******* アプリケーション内SD-CARD操作処理用ERROR処理 **************
+SERR:
+		CP		0F0H
+		JR		NZ,SERR3
+		LD		DE,MSG_F0
+		JR		SERRMSG
+		
+SERR3:	CP		0F1H
+		JR		NZ,SERR99
+		LD		DE,MSG_F1
+		JR		SERRMSG
+		
+SERR99:	CALL	PRTBYT
+		LD		DE,MSG99
+		
+SERRMSG:
+		CALL	MSGPR
+		CALL	LETLN
+		POP		BC
+		POP		DE
+		POP		HL
+;**** ファイルネーム入力へ復帰 ****
+		JP		MLH6
+
+;**** コマンドリスト ****
+; 将来拡張用
+CMD1:	DB		'FDL',0DH
+
 
 ;**************************** 04F8H MONITOR リード データ代替処理 ********************
 MLDAT:
