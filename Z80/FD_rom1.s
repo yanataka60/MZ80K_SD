@@ -10,6 +10,7 @@
 ;2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
 ;2022. 2.10 04D8H MONITOR リード インフォメーション代替処理の中からFDLコマンドを使えるように修正
 ;           FDLコマンド処理をサブルーチン化
+;2022. 2.11 04D8H MONITOR リード インフォメーション代替処理の中から呼ぶFDLコマンドがMZ-700 MONITOR 1Z-009A、1Z-009B環境下では使えないバグを修正しました。
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -19,7 +20,6 @@ MSGPR		EQU		0015H
 PLIST		EQU		0018H
 GETKEY		EQU		001BH
 TIMST		EQU		0033H
-CMPSTR		EQU		0180H
 PRTWRD		EQU		03BAH
 PRTBYT		EQU		03C3H
 HLHEX		EQU		0410H
@@ -1212,6 +1212,24 @@ SERRMSG:
 		POP		HL
 ;**** ファイルネーム入力へ復帰 ****
 		JP		MLH6
+
+;**** コマンド文字列比較 ****
+CMPSTR:
+		PUSH	BC
+		PUSH	DE
+CMP1:	LD		A,(DE)
+		CP		(HL)
+		JR		NZ,CMP2
+		DEC		B
+		JR		Z,CMP2
+		CP		0Dh
+		JR		Z,CMP2
+		INC		DE
+		INC		HL
+		JR		CMP1
+CMP2:	POP		DE
+		POP		BC
+		RET
 
 ;**** コマンドリスト ****
 ; 将来拡張用
