@@ -6,7 +6,7 @@ encoding utf-8
 Sheet 1 1
 Title "MZ-80K_SD"
 Date "2022-01-14"
-Rev "Rev1.5.1"
+Rev "Rev1.5.2"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -357,7 +357,6 @@ NoConn ~ 11250 4300
 NoConn ~ 10650 5600
 NoConn ~ 10550 5600
 NoConn ~ 10050 4400
-NoConn ~ 10050 4300
 NoConn ~ 10050 4200
 NoConn ~ 10050 4100
 Wire Wire Line
@@ -970,12 +969,12 @@ $EndComp
 $Comp
 L 74xx:74LS04 U1
 U 3 1 6232C3F4
-P 3750 8350
-F 0 "U1" H 3400 8500 50  0000 C CNN
-F 1 "74LS04" H 3950 8500 50  0000 C CNN
-F 2 "Package_DIP:DIP-14_W7.62mm_LongPads" H 3750 8350 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS04" H 3750 8350 50  0001 C CNN
-	3    3750 8350
+P 8900 2900
+F 0 "U1" H 8550 3050 50  0000 C CNN
+F 1 "74LS04" H 9100 3050 50  0000 C CNN
+F 2 "Package_DIP:DIP-14_W7.62mm_LongPads" H 8900 2900 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS04" H 8900 2900 50  0001 C CNN
+	3    8900 2900
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -1110,10 +1109,6 @@ Wire Wire Line
 	6700 6550 6700 6450
 Wire Wire Line
 	3450 7850 3300 7850
-Wire Wire Line
-	3300 7850 3300 8350
-Wire Wire Line
-	3300 8350 3450 8350
 $Comp
 L power:GND #PWR02
 U 1 1 62817458
@@ -1125,9 +1120,6 @@ F 3 "" H 3300 8450 50  0001 C CNN
 	1    3300 8450
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	3300 8450 3300 8350
-Connection ~ 3300 8350
 $Comp
 L Device:C C1
 U 1 1 628C00D7
@@ -1242,7 +1234,6 @@ Wire Wire Line
 	5250 8700 5250 8800
 Connection ~ 5250 8700
 NoConn ~ 4050 7850
-NoConn ~ 4050 8350
 Wire Wire Line
 	9550 5200 10050 5200
 Wire Wire Line
@@ -1261,4 +1252,17 @@ Wire Wire Line
 	9550 4500 10050 4500
 Wire Wire Line
 	9550 6100 11600 6100
+Wire Wire Line
+	7950 3600 7950 2900
+Wire Wire Line
+	9950 2900 9950 4300
+Wire Wire Line
+	9950 4300 10050 4300
+Connection ~ 7950 3600
+Wire Wire Line
+	3300 7850 3300 8450
+Wire Wire Line
+	7950 2900 8600 2900
+Wire Wire Line
+	9200 2900 9950 2900
 $EndSCHEMATC
