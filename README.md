@@ -1,6 +1,6 @@
 # MZ-80KにSD-Cardとのロード、セーブ機能を
 
-![MZ-80K_SD](https://github.com/yanataka60/MZ80K_SD/blob/main/KAIZOU/MZ-80K_SD.jpg)
+![MZ-80K_SD](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MZ-80K_SD.jpg)
 
 　ROMをF000Hに置くことでMZ-80Kにフロッピーディスク装置を外付けした際に起動するためのFDコマンドを利用できますが、フロッピーディスク装置の代わりにSD-CARDを繋いでしまおうというものです。
 
