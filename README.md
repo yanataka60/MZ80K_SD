@@ -660,4 +660,4 @@ NEW NAME:TEST2[CR]
 
 2022.3.28
 
-誤字修正　誤「FDC及びFDDコマンド」 -> 正「FDR及びFDDコマンド」
+　誤字修正　誤「FDC及びFDDコマンド」 -> 正「FDR及びFDDコマンド」
