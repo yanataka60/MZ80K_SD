@@ -1,4 +1,4 @@
-19118889822012565
+19115641552802565
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -56391,20 +56391,6 @@ Yellow 5381 Series LED
 0
 2
 2
-MZ80k_SD
-AE-microSD-LLCNV
-Through hole straight pin header, 1x09, 2.54mm pitch, single row
-Through hole pin header THT 1x09 2.54mm single row
-0
-13
-9
-MZ80k_SD
-Arduino_Pro_Mini
-Arduino Pro Mini
-Arduino Pro Mini
-0
-28
-28
 Module
 A20_OLINUXINO_LIME2
 A20 Olinuxino LIME2, 1.2GHz, 512-1024MB RAM, Micro-SD, NAND or eMMC, 1000Mbit Ethernet
