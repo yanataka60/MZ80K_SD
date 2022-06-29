@@ -1,0 +1,37 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'CMT2SD_CHECK'
+  ClientHeight = 382
+  ClientWidth = 482
+  Position = DesktopCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Memo1: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    StyledSettings = [Size, Style, FontColor]
+    TextSettings.Font.Family = 'MS Gothic'
+    Align = Client
+    DragMode = dmAutomatic
+    Size.Width = 482.000000000000000000
+    Size.Height = 349.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    OnDragLeave = Memo1DragLeave
+    OnDragOver = Memo1DragOver
+    Viewport.Width = 478.000000000000000000
+    Viewport.Height = 345.000000000000000000
+  end
+  object Label1: TLabel
+    Align = Top
+    Size.Width = 482.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = #19979#12398#12508#12483#12463#12473#12395#12501#12449#12452#12523#12434#12489#12521#12483#12464'&&'#12489#12525#12483#12503#12375#12390#12367#12384#12373#12356#12290
+    TabOrder = 1
+  end
+end

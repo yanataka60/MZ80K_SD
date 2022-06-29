@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2020/06/08 21:20:34.000.665,=C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/06/08 21:21:36.000.727,=C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2022/06/28 16:44:56.000.578,=C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2022/06/28 16:45:12.000.283,=C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2022/06/28 16:58:00.000.292,C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.fmx=E:\EXTEDED_C\Borland Studio Projects\CMT2SD_CHECK\CMT2SD_CHECK1.fmx</Transaction>
+    <Transaction>2022/06/28 16:58:00.000.292,C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Unit1.pas=E:\EXTEDED_C\Borland Studio Projects\CMT2SD_CHECK\CMT2SD_CHECK1.pas</Transaction>
+    <Transaction>2022/06/28 16:58:12.000.127,C:\Users\yanat\Documents\Embarcadero\Studio\Projects\Project1.dproj=E:\EXTEDED_C\Borland Studio Projects\CMT2SD_CHECK\CMT2SD_CHECK.dproj</Transaction>
+  </Transactions>
+	<BT_BuildType>Debug</BT_BuildType>
+</BorlandProject>
