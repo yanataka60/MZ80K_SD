@@ -65,7 +65,6 @@ ENT2:	JP		MSDAT
 ENT3:	JP		MLHED
 ENT4:	JP		MLDAT
 ENT5:	JP		MVRFY
-
 		
 START:	CALL	INIT
 		LD		DE,LBUF     ;MZ-80K、MZ-700とも起動コマンドは'*FD'に統一
@@ -993,6 +992,7 @@ DEND:
 
 ;*********************** 0436H MONITOR ライト インフォメーション代替処理 ************
 MSHED:
+		DI
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
@@ -1041,6 +1041,7 @@ MSH3:	LD		A,(HL)     ;インフォメーション ブロック送信
 
 ;******************** 0475H MONITOR ライト データ代替処理 **********************
 MSDAT:
+		DI
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
@@ -1074,6 +1075,7 @@ MSD1:	LD		A,(HL)
 
 ;************************** 04D8H MONITOR リード インフォメーション代替処理 *****************
 MLHED:
+		DI
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
@@ -1238,6 +1240,7 @@ CMD1:	DB		'FDL',0DH
 
 ;**************************** 04F8H MONITOR リード データ代替処理 ********************
 MLDAT:
+		DI
 		PUSH	DE
 		PUSH	BC
 		PUSH	HL
@@ -1269,7 +1272,9 @@ MLDAT:
 		JR		MRET       ;正常RETURN
 
 ;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
-MVRFY:	XOR		A          ;正常終了フラグ
+MVRFY:
+		DI
+		XOR		A          ;正常終了フラグ
 ;		EI
 
 		RET

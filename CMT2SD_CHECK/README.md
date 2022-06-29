@@ -4,13 +4,6 @@
 
 　そこでROMはそのままにしてアプリケーション側にSD対応パッチを当てるツールを作ってみました。
 
-## MZ-80K_SD用ROM
-
-　今までのMZ-80K_SD用ROMでは正常に動作しない場合があります。
-
-　SDパッチあてアプリケーションの実行にはCMT2SD_CHECKフォルダ、ROMフォルダ内の「FD_rom.BIN」を使ってください。
-
-　なお、CMT2SD_CHECKフォルダ、ROMフォルダ内の「FD_rom.BIN」のまま、パッチを当てたMONITOR SP-1002を使っても問題ありません。
 ## CMT2SD_CHECKの使い方
 
 　デスクトップ等適当な場所に「CMT2SD_CHECK.EXE」をコピーしてダブルクリックで起動させてください。
@@ -38,3 +31,10 @@
 　「CMT2SD_CHECK.EXE」はDelphi 10.4Community Editionを使って作成しました。
 
 　Pascalにしては拙いコードだとは思いますが、ご容赦願います。
+
+## 追記
+2022.6.30
+
+　Z80フォルダの「FD_rom.BIN」を今回の「FD_rom.BIN」へ置き換えました。
+　
+　「CMT2SD_CHECK」によりパッチを当てたアプリケーションを使うときには新しい「FD_rom.BIN」への交換が必要です。
