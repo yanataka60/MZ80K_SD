@@ -692,5 +692,5 @@ NEW NAME:TEST2[CR]
 2022.6.30
 
 　Z80フォルダの「FD_rom.BIN」を今回の「FD_rom.BIN」へ置き換えました。
-　
+
 　「CMT2SD_CHECK」によりパッチを当てたアプリケーションを使うときには新しい「FD_rom.BIN」への交換が必要です。
