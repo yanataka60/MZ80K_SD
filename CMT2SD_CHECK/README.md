@@ -32,7 +32,7 @@
 
 　動作が犯して場合には、変更箇所テキストファイルを参照して元に戻してください。
 
-##「CMT2SD_CHECK.EXE」ソースコードについて
+## 「CMT2SD_CHECK.EXE」ソースコードについて
 　「CMT2SD_CHECK.EXE」はDelphi 10.4Community Editionを作成しました。
 
 　Pascalにしては拙いコードだとは思いますが、ご容赦願います。
