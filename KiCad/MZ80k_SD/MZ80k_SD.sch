@@ -1265,4 +1265,90 @@ Wire Wire Line
 	7950 2900 8600 2900
 Wire Wire Line
 	9200 2900 9950 2900
+Text Label 2100 5300 0    50   ~ 0
+D0
+Text Label 2100 5200 0    50   ~ 0
+D1
+Text Label 2100 5100 0    50   ~ 0
+D2
+Text Label 2100 5000 0    50   ~ 0
+D3
+Text Label 2100 4900 0    50   ~ 0
+D4
+Text Label 2100 4800 0    50   ~ 0
+D5
+Text Label 2100 4700 0    50   ~ 0
+D6
+Text Label 2100 4600 0    50   ~ 0
+D7
+Text Label 2100 4400 0    50   ~ 0
+A0
+Text Label 2100 4300 0    50   ~ 0
+A1
+Text Label 2100 4200 0    50   ~ 0
+A2
+Text Label 2100 4100 0    50   ~ 0
+A3
+Text Label 2100 4000 0    50   ~ 0
+A4
+Text Label 2100 3900 0    50   ~ 0
+A5
+Text Label 2100 3800 0    50   ~ 0
+A6
+Text Label 2100 3700 0    50   ~ 0
+A7
+Text Label 2100 3600 0    50   ~ 0
+A8
+Text Label 2100 3500 0    50   ~ 0
+A9
+Text Label 2100 3400 0    50   ~ 0
+A10
+Text Label 2100 3300 0    50   ~ 0
+A11
+Text Label 2100 3200 0    50   ~ 0
+A12
+Text Label 2100 3100 0    50   ~ 0
+A13
+Text Label 2100 3000 0    50   ~ 0
+A14
+Text Label 2100 2900 0    50   ~ 0
+A15
+Text Label 1450 3100 0    50   ~ 0
+GND
+Text Label 1400 3200 0    50   ~ 0
+~MREQ
+Text Label 1450 3300 0    50   ~ 0
+GND
+Text Label 1450 3500 0    50   ~ 0
+GND
+Text Label 1450 3700 0    50   ~ 0
+GND
+Text Label 1450 4100 0    50   ~ 0
+GND
+Text Label 1450 4500 0    50   ~ 0
+GND
+Text Label 1450 4600 0    50   ~ 0
+GND
+Text Label 1450 4700 0    50   ~ 0
+GND
+Text Label 1450 4800 0    50   ~ 0
+GND
+Text Label 1450 4900 0    50   ~ 0
+GND
+Text Label 1450 5000 0    50   ~ 0
+GND
+Text Label 1450 5100 0    50   ~ 0
+GND
+Text Label 1450 5200 0    50   ~ 0
+GND
+Text Label 1450 5300 0    50   ~ 0
+GND
+Text Label 1400 3400 0    50   ~ 0
+~IORQ
+Text Label 1500 3600 0    50   ~ 0
+~RD
+Text Label 1500 3800 0    50   ~ 0
+~WR
+Text Label 1400 4400 0    50   ~ 0
+RESET
 $EndSCHEMATC
