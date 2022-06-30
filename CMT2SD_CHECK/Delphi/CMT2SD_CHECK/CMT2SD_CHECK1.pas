@@ -70,189 +70,189 @@ begin
       CLOSEFILE(F1);
 
       CNT1 := 1;
-      s2 := '000000';
-      WHILE cnt1<=flen+1 DO
+      s2 := '';
+      WHILE cnt1<=flen-2 DO
         BEGIN
-          s2:=copy(s2,3,4)+inttohex(ord(buf2[cnt1]),2);
+          s2:=inttohex(ord(buf2[cnt1]),2)+inttohex(ord(buf2[cnt1+1]),2)+inttohex(ord(buf2[cnt1+2]),2);
           if s2='CD2100' then
             begin
-              s3:='WRINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD04F0';
+              s3:='WRINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD04F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($04);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($04);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C32100' then
             begin
-              s3:='WRINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C304F0';
+              s3:='WRINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C304F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($04);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($04);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD2400' then
             begin
-              s3:='WRDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD07F0';
+              s3:='WRDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD07F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($07);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($07);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C32400' then
             begin
-              s3:='WRDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C307F0';
+              s3:='WRDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C307F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($07);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($07);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD2700' then
             begin
-              s3:='RDINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD0AF0';
+              s3:='RDINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD0AF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($0A);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($0A);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C32700' then
             begin
-              s3:='RDINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C30AF0';
+              s3:='RDINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C30AF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($0A);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($0A);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD2A00' then
             begin
-              s3:='RDDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD0DF0';
+              s3:='RDDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD0DF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($0D);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($0D);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C32A00' then
             begin
-              s3:='RDDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C30DF0';
+              s3:='RDDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C30DF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($0D);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($0D);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD2D00' then
             begin
-              s3:='VERFY : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD10F0';
+              s3:='VERFY : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD10F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($10);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($10);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C32D00' then
             begin
-              s3:='VERFY : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C310F0';
+              s3:='VERFY : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C310F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($10);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($10);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
 
           if s2='CD3604' then
             begin
-              s3:='WRINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD04F0';
+              s3:='WRINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD04F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($04);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($04);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C33604' then
             begin
-              s3:='WRINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C304F0';
+              s3:='WRINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C304F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($04);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($04);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD7504' then
             begin
-              s3:='WRDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD07F0';
+              s3:='WRDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD07F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($07);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($07);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C37504' then
             begin
-              s3:='WRDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C307F0';
+              s3:='WRDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C307F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($07);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($07);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CDD804' then
             begin
-              s3:='RDINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD0AF0';
+              s3:='RDINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD0AF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($0A);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($0A);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C3D804' then
             begin
-              s3:='RDINF : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C30AF0';
+              s3:='RDINF : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C30AF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($0A);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($0A);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CDF804' then
             begin
-              s3:='RDDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD0DF0';
+              s3:='RDDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD0DF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($0D);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($0D);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C3F804' then
             begin
-              s3:='RDDAT : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C30DF0';
+              s3:='RDDAT : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C30DF0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($0D);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($0D);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='CD8805' then
             begin
-              s3:='VERFY : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> CD10F0';
+              s3:='VERFY : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> CD10F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($CD);
-              buf2[cnt1-1]:=chr($10);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($CD);
+              buf2[cnt1+1]:=chr($10);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           if s2='C38805' then
             begin
-              s3:='VERFY : ADRS '+inttohex(CNT1-3,4)+'h : '+s2+' -> C310F0';
+              s3:='VERFY : ADRS '+inttohex(CNT1-1,4)+'h : '+s2+' -> C310F0';
               memo1.Lines.Add(s3);
-              buf2[cnt1-2]:=chr($C3);
-              buf2[cnt1-1]:=chr($10);
-              buf2[cnt1]:=chr($F0);
+              buf2[cnt1]:=chr($C3);
+              buf2[cnt1+1]:=chr($10);
+              buf2[cnt1+2]:=chr($F0);
               cnt2:=cnt2+1;
             end;
           CNT1 := CNT1 + 1;
