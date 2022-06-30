@@ -29,6 +29,7 @@
 　KiCadフォルダ内のMZ80K_SD.pdf参照
 
 [回路図](https://github.com/yanataka60/MZ80K_SD/blob/main/KiCad/MZ80k_SD/MZ80K_SD.pdf)
+![回路図](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MZ-80K_SD_schematic.jpg)
 
 　Rev1.5.2になりました。Rev1.5.1との違いは、外部電源での運用時にArduinoと本体の初期化のタイミングのズレにより誤動作してしまうことをArduinoのReset端子を本体のReset信号に接続し解消したことになります。
 
