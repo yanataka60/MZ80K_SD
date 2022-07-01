@@ -72,6 +72,7 @@
 　　　注2)秋月電子通商　AE-microSD-LLCNVのJ1ジャンパはショートしてください。
 
 　　　注3)Arduino等に使われる5V電源に対応したMicroSD Card Adapterも正しく信号を繋げば使えるとご報告いただきました。
+
 　　　　　　|AE-microSD-LLCNVピン番号|MicroSD Card Adapterピン番号|信号名|
 　　　　　　| ---------------------- | -------------------------- | ---- |
 　　　　　　|1|2|5V|
