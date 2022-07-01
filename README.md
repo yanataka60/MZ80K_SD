@@ -81,6 +81,7 @@
 |6|3|MISO|
 |7|4|MOSI|
 |8|6|CS|
+
 ![MicroSD Card Adapter](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter.jpg)
 
 
