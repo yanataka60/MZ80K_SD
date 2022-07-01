@@ -20,6 +20,8 @@
 
 　　BASIC SP-5030_SD.mzt、BASIC SP-5030_SD.txtが作成される。
 
+![BASIC SP-5030](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/CMT2SD_CHECK_1.jpg)
+
 ## 注意点
 　「CMT2SD_CHECK.EXE」はMONITOR SP-1002のCMT関連ルーチンを呼び出していると思われるコードと一致した場合にパッチを当てますが、アプリケーションの中では命令コードではなくデータとして扱っているバイナリがたまたま一致した場合にもパッチを当ててしまいます。
 
