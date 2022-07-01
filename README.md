@@ -73,14 +73,14 @@
 
 　　　注3)Arduino等に使われる5V電源に対応したMicroSD Card Adapterも正しく信号を繋げば使えるとご報告いただきました。
 
-　　　　　　|AE-microSD-LLCNVピン番号|MicroSD Card Adapterピン番号|信号名|
-　　　　　　| ---------------------- | -------------------------- | ---- |
-　　　　　　|1|2|5V|
-　　　　　　|4|1|GND|
-　　　　　　|5|5|SCK|
-　　　　　　|6|3|MISO|
-　　　　　　|7|4|MOSI|
-　　　　　　|8|6|CS|
+|AE-microSD-LLCNVピン番号|MicroSD Card Adapterピン番号|信号名|
+| ---------------------- | -------------------------- | ---- |
+|1|2|5V|
+|4|1|GND|
+|5|5|SCK|
+|6|3|MISO|
+|7|4|MOSI|
+|8|6|CS|
 ![MicroSD Card Adapter](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter.jpg)
 
 
