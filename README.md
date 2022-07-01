@@ -46,7 +46,7 @@
 
 　U5 U6: 74LS30
 
-　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)
+　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)(注3)
 
 　C1 C2 C3 C4 C5: セラミックコンデンサ 0.1μF
 
@@ -70,6 +70,18 @@
 　　　注1)Arduino Pro MiniはA4、A5ピンも使っています。
 
 　　　注2)秋月電子通商　AE-microSD-LLCNVのJ1ジャンパはショートしてください。
+
+　　　注3)Arduino等に使われる5V電源に対応したMicroSD Card Adapterも正しく信号を繋げば使えるとご報告いただきました。
+　　　　　　|AE-microSD-LLCNVピン番号|MicroSD Card Adapterピン番号|信号名|
+　　　　　　| ---------------------- | -------------------------- | ---- |
+　　　　　　|1|2|5V|
+　　　　　　|4|1|GND|
+　　　　　　|5|5|SCK|
+　　　　　　|6|3|MISO|
+　　　　　　|7|4|MOSI|
+　　　　　　|8|6|CS|
+![MicroSD Card Adapter](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter.jpg)
+
 
 ## ROMプログラムについて
 　Z80フォルダ内にFD_rom1.bin、FD_rom2.bin、FD_rom.binと3つありますが、SD-CARDを利用するためのプログラムFD_rom1.bin(28C64の下位に配置)、MONITORをCMT利用に戻すためのプログラムFD_rom2.bin(28C64の上位に配置)、2つを合わせたプログラムFD_rom.binとなっています。
@@ -529,13 +541,17 @@ NEW NAME:TEST2[CR]
 
 　不安定動作の解消に以下の皆様にご協力とご助言をいただきました。ありがとうございました。(アルファベット順)
 
-　EIJ様
+　　EIJ様
 
-　hlide fremen様
+　　hlide fremen様
 
-　junk_suga様
+　　junk_suga様
 
-　retrogamer128様
+　　retrogamer128様
+
+　Arduino等に使われる5V電源に対応したMicroSD Card Adapterを使って作られた事例をご報告いただきました。ありがとうございました。
+
+　　𝕊𝕖ñ𝕠𝕣 𝔼𝕤𝕥𝕖𝕓𝕒𝕟様
 
 ## 追記
 2021.12.12
