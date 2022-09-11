@@ -46,7 +46,11 @@
 
 　U5 U6: 74LS30
 
-　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)(注3)
+　J2、J5のいづれか
+
+　　　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)
+
+　　　J5: MicroSD Card Adapter(Arduino等に使われる5V電源に対応したもの)(注3)
 
 　C1 C2 C3 C4 C5: セラミックコンデンサ 0.1μF
 
@@ -73,6 +77,22 @@
 
 　　　注3)Arduino等に使われる5V電源に対応したMicroSD Card Adapterも正しく信号を繋げば使えるとご報告いただきました。
 
+### MicroSD Card Adapterを使う(Rev1.5.3)
+J5にハンダ付けします。
+
+MicroSD Card Adapterについているピンヘッダを除去してハンダ付けするのが一番確実ですが、J5の穴にMicroSD Card Adapterをぴったりと押しつけ、裏から多めにハンダを流し込むことでハンダ付けをする方法もあります。なお、この方法の時にはしっかりハンダ付けが出来たかテスターで確認しておいた方が安心です。
+
+ハンダ付けに自信のない方はJ2の秋月電子通商　AE-microSD-LLCNVをお使いください。AE-microSD-LLCNVならパワーLED、アクセスLEDが付いています。
+
+![MicroSD Card Adapter1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(1).JPG)
+
+![MicroSD Card Adapter2](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(2).JPG)
+
+![MicroSD Card Adapter3](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(3).JPG)
+
+
+### MicroSD Card Adapterを使う(Rev1.5.2)
+以下のピン番号を参考に変換基板等繋ぎ方は適宜対応してください。
 |AE-microSD-LLCNVピン番号|MicroSD Card Adapterピン番号|信号名|
 | ---------------------- | -------------------------- | ---- |
 |1|2|5V|
@@ -131,6 +151,14 @@
 　回路図J1のピン番号とMZ-80K外部拡張端子のピン番号は一致していません。ピン配置は一致していますのでJPGフォルダにある「Rev1.5.1+MZ-80K Series(6).JPG」を参考にフラットケーブルで接続してください。
 
 　MZ-700の外部拡張端子はMZ-80Kとピン配置は同じですが、ピンコネクタではなく、カードエッジコネクタです。
+
+![接続1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(1).JPG)
+
+![接続2](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(6).JPG)
+
+![接続3](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(5).JPG)
+
+![接続4](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-700.JPG)
 
 ## 電源
 　MZ-80Kのバスには+5Vが出ていないため、最初はDCジャックから外部電源を供給するつもりだったのですが、本体と電源が一緒のほうが扱いが楽そうだったので本体から+5Vを引き出して供給する用のコネクタと二通りを用意しています。
@@ -719,3 +747,7 @@ NEW NAME:TEST2[CR]
 2022.8.4
 
 Arduinoを基板に直付けしている場合、Arduinoプログラムを書き込むときの注意点を書き加えました。
+
+2022.9.11
+
+　MicroSD Card Adapter用の端子を付加し、基板をRev1.5.3に更新。
