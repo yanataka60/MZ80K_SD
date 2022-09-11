@@ -6,7 +6,7 @@ encoding utf-8
 Sheet 1 1
 Title "MZ-80K_SD"
 Date "2022-01-14"
-Rev "Rev1.5.2"
+Rev "Rev1.5.3"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -1351,4 +1351,47 @@ Text Label 1500 3800 0    50   ~ 0
 ~WR
 Text Label 1400 4400 0    50   ~ 0
 RESET
+$Comp
+L Connector_Generic:Conn_01x06 J5
+U 1 1 62D11F48
+P 13050 3250
+F 0 "J5" H 13130 3242 50  0000 L CNN
+F 1 "MicroSD Card Adapter" H 12450 2800 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical" H 13050 3250 50  0001 C CNN
+F 3 "~" H 13050 3250 50  0001 C CNN
+	1    13050 3250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	12850 3050 12600 3050
+Wire Wire Line
+	12850 3150 12600 3150
+Wire Wire Line
+	12850 3250 12600 3250
+Wire Wire Line
+	12850 3350 12600 3350
+Wire Wire Line
+	12850 3450 12600 3450
+Wire Wire Line
+	12850 3550 12600 3550
+Text Label 11000 2200 0    50   ~ 0
+SCK
+Text Label 11000 2300 0    50   ~ 0
+MISO
+Text Label 11000 2400 0    50   ~ 0
+MOSI
+Text Label 11100 2500 0    50   ~ 0
+CS
+Text Label 12600 3050 0    50   ~ 0
+GND
+Text Label 12600 3150 0    50   ~ 0
++5V
+Text Label 12600 3250 0    50   ~ 0
+MISO
+Text Label 12600 3350 0    50   ~ 0
+MOSI
+Text Label 12600 3450 0    50   ~ 0
+SCK
+Text Label 12600 3550 0    50   ~ 0
+CS
 $EndSCHEMATC
