@@ -90,6 +90,8 @@ MicroSD Card Adapterについているピンヘッダを除去してハンダ付
 
 ![MicroSD Card Adapter3](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(3).JPG)
 
+![MicroSD Card Adapter4](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(4).JPG)
+
 
 ### MicroSD Card Adapterを使う(Rev1.5.2)
 以下のピン番号を参考に変換基板等繋ぎ方は適宜対応してください。
