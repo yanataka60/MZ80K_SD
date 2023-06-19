@@ -9,6 +9,7 @@
 // 2022. 2. 2 DOSファイル名がアルファベット小文字でもFDL xで検索できるように修正
 // 2022. 2. 4 MZ-1200対策　初期化時にdelay(1000)を追加
 // 2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
+// 2023. 6.19 MZ-2000_SDの起動方式追加によりBOOT LOADER読み込みを追加。MZ-80K_SDには影響なし。
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -71,7 +72,7 @@ void setup(){
   digitalWrite(FLGPIN,LOW);
 
 // 2022. 2. 4 MZ-1200対策
-  delay(1000);
+  delay(1500);
 
   // SD初期化
   if( !SD.begin(CABLESELECTPIN,8) )
@@ -799,6 +800,47 @@ void mon_ldata(void){
   }
 }
 
+//BOOT処理(MZ-2000_SD専用)
+void boot(void){
+//ファイルネーム取得
+  for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
+    m_name[lp1] = rcv1byte();
+  }
+////  Serial.print("m_name:");
+////  Serial.println(m_name);
+//ファイルが存在しなければERROR
+  if (SD.exists(m_name) == true){
+    snd1byte(0x00);
+//ファイルオープン
+    File file = SD.open( m_name, FILE_READ );
+    if( true == file ){
+    snd1byte(0x00);
+//ファイルサイズ送信
+      unsigned long f_length = file.size();
+      unsigned int f_len1 = f_length / 256;
+      unsigned int f_len2 = f_length % 256;
+      snd1byte(f_len2);
+      snd1byte(f_len1);
+////  Serial.println(f_length,HEX);
+////  Serial.println(f_len2,HEX);
+////  Serial.println(f_len1,HEX);
+
+//実データ送信
+      for (unsigned long lp1 = 1;lp1 <= f_length;lp1++){
+         byte i_data = file.read();
+         snd1byte(i_data);
+      }
+
+    } else {
+//状態コード送信(ERROR)
+      snd1byte(0xFF);
+    }  
+  } else {
+//状態コード送信(FILE NOT FIND ERROR)
+    snd1byte(0xF1);
+  }
+}
+
 void loop()
 {
   digitalWrite(PB0PIN,LOW);
@@ -811,6 +853,7 @@ void loop()
   digitalWrite(PB7PIN,LOW);
   digitalWrite(FLGPIN,LOW);
 //コマンド取得待ち
+////  Serial.print("cmd:");
   byte cmd = rcv1byte();
 ////  Serial.println(cmd,HEX);
   if (eflg == false){
@@ -898,6 +941,13 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         mon_ldata();
+        break;
+//95hでBOOT LOAD(MZ-2000_SD専用)
+      case 0x95:
+////  Serial.println("BOOT LOAD START");
+//状態コード送信(OK)
+        snd1byte(0x00);
+        boot();
         break;
       default:
 //状態コード送信(CMD ERROR)
