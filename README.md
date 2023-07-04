@@ -42,7 +42,7 @@
 
 　U3: 8255
 
-　U4: Arduino Pro Mini 5V又は同等品(注1)
+　U4: Arduino_Pro_Mini_5V Atmega328版を使用 168版は不可。(注1)
 
 　U5 U6: 74LS30
 
@@ -66,9 +66,13 @@
 
 　50Pinケーブル
 
+　2Pin分のピンヘッダ　Arduino_Pro_MiniにはA4、A5用のピンヘッダが付いていないため別途必要です(秋月電子通商 PH-1x40SGなど)
+
 　本体内から5Vを取る場合、ケーブル少々
 
 　本体ROMにパッチをあてる場合、27C32等を2532ソケットに差すためのアダプタ
+
+　Arduino_Pro_Miniを取り外し可能としたい場合、26Pin分のピンソケットを用意します(秋月電子通商 FHU-1x42SGなど)
 
 
 　　　注1)Arduino Pro MiniはA4、A5ピンも使っています。
