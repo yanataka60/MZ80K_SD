@@ -16,7 +16,7 @@
 
 　TS-700.binならヘッダをつけてMZTファイルにします。
 
-![Header](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MZ-80K_SD_schematic.jpg)
+![Header](https://github.com/yanataka60/MZ80K_SD/blob/main/TS-700/HEADER.jpg)
 
 　TS-700.mztならファイルサイズと実行アドレスを修正します。
 
