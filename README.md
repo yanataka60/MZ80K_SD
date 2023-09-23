@@ -143,6 +143,7 @@ MicroSD Card Adapterについているピンヘッダを除去してハンダ付
 |M27C64A                            |
 |TMM2764D                           |
 |TMS2764                            |
+|D28C64ACZ                          |
 
 ## Arduinoプログラム
 　Arduino IDEを使ってArduinoフォルダ内のMZ-80K_SD.inoを書き込みます。
@@ -771,3 +772,7 @@ NEW NAME:TEST2[CR]
 2023.9.20
 
 　「I/O別冊 WICS・BASEプログラム集」に掲載されているTS-700、SuperBASE-700、WICSインタプリタ、コンパイラへの対応を追加した。
+
+2023.9.23
+
+　Tookatoさんから報告のあった「D28C64ACZ」を動かない個体の例が報告されているROMのリストに追加しました。
