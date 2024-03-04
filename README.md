@@ -587,7 +587,7 @@ NEW NAME:TEST2[CR]
 　そこで以下の機械語をアプリケーションに組み込み、コールすることでアプリケーション内でDOSファイル名を指定することが可能です。
 
 
-　その後、0F00DHをコールすればSDからLOADが実行されます。
+　その後、F00DHをコールすればSDからLOADが実行されます。
 
 |コード|
 | ------------ |
@@ -596,13 +596,13 @@ NEW NAME:TEST2[CR]
 |　　　　　PUSH　　DE|
 |　　　　　PUSH　　BC|
 |　　　　　PUSH　　HL|
-|　　　　　CALL　　0F082H|
+|　　　　　CALL　　F082H|
 |　　　　　PUSH　　DE|
 |　　　　　XOR　　　A|
 |　　　　　LD　　　DE,0000H|
 |　　　　　CALL　　0033H|
 |　　　　　POP　　　DE|
-|　　　　　JP　　　0F85BH|
+|　　　　　JP　　　F85BH|
 |FNAME:|
 |　　　　　DB　　　'TEST',0DH|
 
@@ -617,13 +617,13 @@ NEW NAME:TEST2[CR]
 |　　　　　PUSH　　DE|
 |　　　　　PUSH　　BC|
 |　　　　　PUSH　　HL|
-|　　　　　CALL　　0F082H|
+|　　　　　CALL　　F082H|
 |　　　　　PUSH　　DE|
 |　　　　　XOR　　　A|
 |　　　　　LD　　　DE,0000H|
 |　　　　　CALL　　0033H|
 |　　　　　POP　　　DE|
-|　　　　　JP　　　0F85BH|
+|　　　　　JP　　　F85BH|
 
 ##### BASICからの呼び出し
 
@@ -631,7 +631,7 @@ NEW NAME:TEST2[CR]
 | ------------ | ------------ |
 |G＄="TEST"|DOSファイル名を表す文字列を文字列変数に代入|
 |USR(＄C000,G＄)|機械語を配置したアドレスとDOSファイル名を表す文字列を代入した文字列変数を値としてUSR関数を実行(SP-5030の場合文字列関数に代入された文字列の最後に0Dhが入ってます)|
-|USR(＄F00DH)|SDからデータをLOAD|
+|USR(＄F00D)|SDからデータをLOAD|
 
 
 ## 謝辞
