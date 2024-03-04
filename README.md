@@ -598,7 +598,7 @@ NEW NAME:TEST2[CR]
 |　　　　　PUSH　　HL|
 |　　　　　CALL　　0F082H|
 |　　　　　PUSH　　DE|
-|　　　　　LD　　　A,00H|
+|　　　　　XOR　　　A|
 |　　　　　LD　　　DE,0000H|
 |　　　　　CALL　　TIMST|
 |　　　　　POP　　　DE|
@@ -611,27 +611,19 @@ NEW NAME:TEST2[CR]
 
 　わずかな機械語ですのでBASICプログラム中にDATA文にしておき、LIMIT文で機械語領域を確保、READ文で読み込み、POKE文でメモリに書き込むようにすれば手軽です。
 
- MLHED:  DI
-
-         PUSH    DE
-
-         PUSH    BC
-
-         PUSH    HL
-
-         CALL    0F082H
-
-         PUSH    DE
-
-         LD      A,00H
-
-         LD      DE,0000H
-
-         CALL    TIMST
-
-         POP     DE
-
-         JP      0F85BH
+|コード|
+| ------------ |
+|MLHED:　　DI|
+|　　　　　PUSH　　DE|
+|　　　　　PUSH　　BC|
+|　　　　　PUSH　　HL|
+|　　　　　CALL　　0F082H|
+|　　　　　PUSH　　DE|
+|　　　　　XOR　　　A|
+|　　　　　LD　　　DE,0000H|
+|　　　　　CALL　　TIMST|
+|　　　　　POP　　　DE|
+|　　　　　JP　　　0F85BH|
 
 ##### BASICからの呼び出し
 
