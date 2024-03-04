@@ -589,33 +589,22 @@ NEW NAME:TEST2[CR]
 
 　その後、04F8HをコールすればSDからLOADが実行されます。
 
- MLHED:  LD      DE,FNAME
-
-         DI
-
-         PUSH    DE
-
-         PUSH    BC
-
-         PUSH    HL
-
-         CALL    0F082H
-
-         PUSH    DE
-
-         LD      A,00H
-
-         LD      DE,0000H
-
-         CALL    TIMST
-
-         POP     DE
-
-         JP      0F85BH
-
- FNAME:
-
-         DB      'TEST',0DH
+|コード|
+| ------------ |
+|MLHED:  LD      DE,FNAME|
+|        DI|
+|        PUSH    DE|
+|        PUSH    BC|
+|        PUSH    HL|
+|        CALL    0F082H|
+|        PUSH    DE|
+|        LD      A,00H|
+|        LD      DE,0000H|
+|        CALL    TIMST|
+|        POP     DE|
+|        JP      0F85BH|
+|FNAME:|
+|        DB      'TEST',0DH|
 
 #### BASIC SP-5030のプログラム中でMZ-80K_SDからLOADするDOSファイル名を指定したい場合
 　BASIC SP-5030で使うときは以下の機械語を適当なアドレスに配置し、BASICから呼び出します。
