@@ -600,7 +600,7 @@ NEW NAME:TEST2[CR]
 |　　　　　PUSH　　DE|
 |　　　　　XOR　　　A|
 |　　　　　LD　　　DE,0000H|
-|　　　　　CALL　　TIMST|
+|　　　　　CALL　　0033H|
 |　　　　　POP　　　DE|
 |　　　　　JP　　　0F85BH|
 |FNAME:|
@@ -621,7 +621,7 @@ NEW NAME:TEST2[CR]
 |　　　　　PUSH　　DE|
 |　　　　　XOR　　　A|
 |　　　　　LD　　　DE,0000H|
-|　　　　　CALL　　TIMST|
+|　　　　　CALL　　0033H|
 |　　　　　POP　　　DE|
 |　　　　　JP　　　0F85BH|
 
