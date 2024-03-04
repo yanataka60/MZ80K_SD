@@ -581,6 +581,78 @@ NEW NAME:TEST2[CR]
 
 なお、起動確認していないアプリケーションでも起動だけであればFDコマンドで起動できる可能性があります。
 
+## 自作アプリケーションでMZ-80K_SDからLOADするDOSファイル名を指定したい場合
+　自作アプリケーションでMZ-80K_SDからLOADする処理を追加したい場合に機械語なら04D8Hをコール、BASICならLOADコマンドを使いますが、MZ-80K_SDの04D8H代替処理ではアプリケーション内でDOSファイル名を指定しておくことが出来ません。
+
+　そこで以下の機械語をアプリケーションに組み込み、コールすることでアプリケーション内でDOSファイル名を指定することが可能です。
+
+
+　その後、04F8HをコールすればSDからLOADが実行されます。
+
+MLHED:	LD		DE,FNAME
+
+		DI
+
+		PUSH	DE
+
+		PUSH	BC
+
+		PUSH	HL
+
+		CALL	0F082H
+
+		PUSH	DE
+
+		LD		A,00H
+
+		LD		DE,0000H
+
+		CALL	TIMST
+
+		POP		DE
+
+		JP		0F85BH
+
+FNAME:
+
+		DB		'TEST',0DH
+
+#### BASIC SP-5030のプログラム中でMZ-80K_SDからLOADするDOSファイル名を指定したい場合
+　BASIC SP-5030で使うときは以下の機械語を適当なアドレスに配置し、BASICから呼び出します。
+
+　わずかな機械語ですのでBASICプログラム中にDATA文にしておき、LIMIT文で機械語領域を確保、READ文で読み込み、POKE文でメモリに書き込むようにすれば手軽です。
+
+MLHED:	DI
+
+		PUSH	DE
+
+		PUSH	BC
+
+		PUSH	HL
+
+		CALL	0F082H
+
+		PUSH	DE
+
+		LD		A,00H
+
+		LD		DE,0000H
+
+		CALL	TIMST
+
+		POP		DE
+
+		JP		0F85BH
+
+##### BASICからの呼び出し
+
+G$="TEST"         <- DOSファイル名を表す文字列を文字列変数に代入
+
+USR($C000,G$)     <- 機械語を配置したアドレスとDOSファイル名を表す文字列を代入した文字列変数を値としてUSR関数を実行
+
+USR($04F8)        <- SDからデータをLOAD
+
+
 ## 謝辞
 　基板の作成に当たり以下のデータを使わせていただきました。ありがとうございました。
 
