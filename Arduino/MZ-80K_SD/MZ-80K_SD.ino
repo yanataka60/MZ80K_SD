@@ -10,6 +10,7 @@
 // 2022. 2. 4 MZ-1200対策　初期化時にdelay(1000)を追加
 // 2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
 // 2023. 6.19 MZ-2000_SDの起動方式追加によりBOOT LOADER読み込みを追加。MZ-80K_SDには影響なし。
+// 2024. 3. 4 sd-card再挿入時の初期化処理を追加
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -38,6 +39,19 @@ char new_name[40];
 #define PA3PIN          (19)
 // ファイル名は、ロングファイルネーム形式対応
 boolean eflg;
+
+void sdinit(void){
+  // SD初期化
+  if( !SD.begin(CABLESELECTPIN,8) )
+  {
+////    Serial.println("Failed : SD.begin");
+    eflg = true;
+  } else {
+////    Serial.println("OK : SD.begin");
+    eflg = false;
+  }
+////    Serial.println("START");
+}
 
 void setup(){
 ////  Serial.begin(9600);
@@ -74,16 +88,7 @@ void setup(){
 // 2022. 2. 4 MZ-1200対策
   delay(1500);
 
-  // SD初期化
-  if( !SD.begin(CABLESELECTPIN,8) )
-  {
-////    Serial.println("Failed : SD.begin");
-    eflg = true;
-  } else {
-////    Serial.println("OK : SD.begin");
-    eflg = false;
-  }
-////  Serial.println("START");
+  sdinit();
 }
 
 //4BIT受信
@@ -237,6 +242,7 @@ char p_name[20];
    } else {
 //状態コード送信(ERROR)
     snd1byte(0xF1);
+    sdinit();
   }
 }
 
@@ -290,14 +296,17 @@ void f_load(void){
 //       } else {
 //状態コード送信(ERROR)
 //        snd1byte(0xF2);
+          sdinit();
 //      }  
      } else {
 //状態コード送信(ERROR)
       snd1byte(0xFF);
+      sdinit();
    }  
    } else {
 //状態コード送信(FILE NOT FIND ERROR)
     snd1byte(0xF1);
+    sdinit();
   }
 }
 
@@ -339,10 +348,12 @@ char w_name[]="0000.mzt";
       } else {
 //状態コード送信(ERROR)
       snd1byte(0xF1);
+      sdinit();
     }
   } else {
 //状態コード送信(ERROR)
     snd1byte(0xF1);
+    sdinit();
   }  
 }
 
@@ -479,6 +490,7 @@ void f_del(void){
       }else{
 //状態コード送信(Error)
         snd1byte(0xf1);
+        sdinit();
       }
     } else{
 //状態コード送信(Cansel)
@@ -487,6 +499,7 @@ void f_del(void){
   }else{
 //状態コード送信(Error)
         snd1byte(0xf1);
+        sdinit();
   }
 }
 
@@ -525,10 +538,12 @@ void f_ren(void){
     }else{
 //状態コード送信(Error)
       snd1byte(0xf1);
+      sdinit();
     }
   }else{
 //状態コード送信(Error)
       snd1byte(0xf1);
+      sdinit();
   }
 }
 
@@ -601,10 +616,12 @@ unsigned int br_chk =0;
       } else {
 //状態コード送信(ERROR)
       snd1byte(0xF1);
+      sdinit();
     }
   }else{
 //状態コード送信(Error)
         snd1byte(0xf1);
+        sdinit();
   }
 }
 
@@ -653,14 +670,17 @@ void f_copy(void){
       }else{
 //状態コード送信(Error)
       snd1byte(0xf1);
+      sdinit();
     }
       }else{
 //状態コード送信(Error)
         snd1byte(0xf3);
+        sdinit();
     }
   }else{
 //状態コード送信(Error)
       snd1byte(0xf1);
+      sdinit();
   }
 }
 
@@ -703,6 +723,7 @@ char m_info[130];
   } else {
 //状態コード送信(ERROR)
     snd1byte(0xF1);
+    sdinit();
   }
 }
 
@@ -761,10 +782,12 @@ void mon_lhead(void){
     } else {
 //状態コード送信(ERROR)
       snd1byte(0xFF);
+      sdinit();
     }  
   } else {
 //状態コード送信(FILE NOT FIND ERROR)
     snd1byte(0xF1);
+    sdinit();
   }
 }
 
@@ -884,6 +907,7 @@ void loop()
 ////  Serial.println("FILE LIST START");
 //状態コード送信(OK)
         snd1byte(0x00);
+        sdinit();
         dirlist();
         break;
 //84hでファイルDelete
@@ -956,5 +980,6 @@ void loop()
   } else {
 //状態コード送信(ERROR)
     snd1byte(0xF0);
+    sdinit();
   }
 }
