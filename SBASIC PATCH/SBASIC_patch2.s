@@ -20,7 +20,7 @@ LBUF		EQU		1108H
 ;0DBH コントロールレジスタ
 
 
-		ORG		5104H
+		ORG		2E00H
 
 		RET
 		

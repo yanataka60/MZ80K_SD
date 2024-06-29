@@ -1,9 +1,9 @@
 		ORG		0021H
 
-		JP		5165H
-		JP		5189H
-		JP		51BDH
-		JP		5218H
-		JP		524BH
+		JP		2E61H
+		JP		2E85H
+		JP		2EB9H
+		JP		2F14H
+		JP		2F47H
 		
 		END
