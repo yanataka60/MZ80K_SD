@@ -659,7 +659,7 @@ DATA 195,091,248
 ### 使い方
 　ロポコVersion 1.2.2を入手します。
 
-　解凍すると「Uncompressed」フォルダにROPOKO80K-PR.MZT、ROPOKO-AR.MZT、ROPOKO-BR.MZT、の三つのファイルがあるのでSDカードにコピーします。
+　解凍すると「Uncompressed」フォルダにROPOKO-PR.MZT、ROPOKO-AR.MZT、ROPOKO-BR.MZT、の三つのファイルがあるのでSDカードにコピーします。
 
 　このGitHubのMZ80K_SDリポジトリ中の「ROPOKO」フォルダ内の「ROPOKO-SD.MZT」をSDカードにコピーします。
 
