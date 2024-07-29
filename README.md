@@ -659,13 +659,13 @@ DATA 195,091,248
 ### 使い方
 　ロポコVersion 1.2.2を入手します。
 
-　解凍すると「Uncompressed」フォルダにROPOKO80K-PR.MZT、ROPOKO80K-AR.MZT、ROPOKO80K-BR.MZT、ROPOKO80K-CR.MZTの四つのファイルがあるのでSDカードにコピーします。
+　解凍すると「Uncompressed」フォルダにROPOKO80K-PR.MZT、ROPOKO-AR.MZT、ROPOKO-BR.MZT、の三つのファイルがあるのでSDカードにコピーします。
 
 　このGitHubのMZ80K_SDリポジトリ中の「ROPOKO」フォルダ内の「ROPOKO-SD.MZT」をSDカードにコピーします。
 
 　FDL又はFDコマンドを使ってSDカードにコピーした「ROPOKO-SD.MZT」を実行します。
 
-　ROPOKO80K-PR.MZTを自動的に読込み、SD対応のパッチを当て、ロポコが起動します。
+　ROPOKO-PR.MZTを自動的に読込み、SD対応のパッチを当て、ロポコが起動します。
 
 　シナリオの読込は、例えばシナリオAを選択し、「テープをセットしてください」と表示された後にCRを一回押すと「DOS FILE:」と表示されるので「ROPOKO-AR」と正しく入力し、CRを押すことで読み込みが始まります。
 
