@@ -1,0 +1,465 @@
+			  Z80 ASSEMBLER - ZASM VER 1.6
+                      	;
+  0003                	GETL		EQU		0003H
+  0006                	LETLN		EQU		0006H
+  0015                	MSGPR		EQU		0015H
+  03C3                	PRTBYT		EQU		03C3H
+  0DDC                	DPCT		EQU		0DDCH
+  10F0                	IBUFE		EQU		10F0H
+  10F1                	FNAME		EQU		10F1H
+  1102                	FSIZE		EQU		1102H
+  1104                	SADRS		EQU		1104H
+  1171                	DSPX		EQU		1171H
+  11A3                	LBUF		EQU		11A3H
+  11AE                	MBUF		EQU		11AEH
+                      	
+                      	;*********** MZ-80K_SD  *****************
+  00D8                	PPI_A		EQU		0D8H
+                      	
+  00D9                	PPI_B		EQU		PPI_A+1
+  00DA                	PPI_C		EQU		PPI_A+2
+  00DB                	PPI_R		EQU		PPI_A+3
+                      	
+                      	;PPI_A PORTA 送信データ(下位4ビット)
+                      	;PPI_B PORTB 受信データ(8ビット)
+                      	;
+                      	;PPI_C PORTC Bit
+                      	;7 IN  CHK
+                      	;6 IN
+                      	;5 IN
+                      	;4 IN 
+                      	;3 OUT
+                      	;2 OUT FLG
+                      	;1 OUT
+                      	;0 OUT
+                      	;
+                      	;PPI_R コントロールレジスタ
+                      	
+  CC7C                			ORG		0CC7CH
+                      			
+  CC7C  11D1CC        			LD		DE,NAME
+  CC7F  CDC8CC        			CALL	MLHED2
+  CC82  CD13CF        			CALL	MLDAT
+                      	
+  CC85  3AAA14        			LD		A,(14AAH)
+  CC88  FE27          			CP		27H
+  CC8A  2030          			JR		NZ,FERR
+  CC8C  3AB514        			LD		A,(14B5H)
+  CC8F  FE2A          			CP		2AH
+  CC91  2029          			JR		NZ,FERR
+  CC93  3A8D19        			LD		A,(198DH)
+  CC96  FE21          			CP		21H
+  CC98  2022          			JR		NZ,FERR
+  CC9A  3A9019        			LD		A,(1990H)
+  CC9D  FE24          			CP		24H
+  CC9F  201B          			JR		NZ,FERR
+                      	
+  CCA1  2109CD        			LD		HL,ENT3
+  CCA4  22AA14        			LD		(14AAH),HL
+  CCA7  210CCD        			LD		HL,ENT4
+  CCAA  22B514        			LD		(14B5H),HL
+  CCAD  2103CD        			LD		HL,ENT1
+  CCB0  228D19        			LD		(198DH),HL
+  CCB3  2106CD        			LD		HL,ENT2
+  CCB6  229019        			LD		(1990H),HL
+                      			
+  CCB9  C30012        			JP		1200H
+  CCBC                	FERR:
+  CCBC  CD0600        			CALL	LETLN
+  CCBF  11DBCC        			LD		DE,FEMSG   ;
+  CCC2  CD1500        			CALL	MSGPR        ;メッセージ表示
+  CCC5  C3AD00        			JP		00ADH
+                      	
+  CCC8                	MLHED2:
+  CCC8  D5            			PUSH	DE
+  CCC9  C5            			PUSH	BC
+  CCCA  E5            			PUSH	HL
+  CCCB  CD16CD        			CALL	INIT
+  CCCE  C3CACE        			JP		MLH7
+                      	
+  CCD1  524F504F4B4F2D	NAME:	DB		'ROPOKO-PR',0DH
+  CCDB                	FEMSG:
+  CCDB  4E4F5420524F50			DB		'NOT ROPOKO-PR OR DIFFERRENT VERSION'
+  CCFE  0D            			DB		0DH
+                      	
+                      	
+  CCFF                	ENTX:
+                      	
+  CD00                	       ORG		0CD00H
+                      	
+  CD00                	ENT0:
+  CD00  C312CD        			JP		START
+                      	;******************** MONITOR CMTルーチン代替 *************************************
+  CD03  C3E8CD        	ENT1:	JP		MSHED		;0021H
+  CD06  C362CE        	ENT2:	JP		MSDAT		;0024H
+  CD09  C395CE        	ENT3:	JP		MLHED		;0027H
+  CD0C  C313CF        	ENT4:	JP		MLDAT		;002AH
+  CD0F  C357CF        	ENT5:	JP		MVRFY		;002DH
+                      			
+  CD12  CD16CD        	START:	CALL	INIT
+  CD15  C9            			RET
+                      	
+                      	;**** 8255初期化 ****
+                      	;PORTC下位BITをOUTPUT、上位BITをINPUT、PORTBをINPUT、PORTAをOUTPUT
+  CD16  3E8A          	INIT:	LD		A,8AH
+  CD18  D3DB          			OUT		(PPI_R),A
+                      	;出力BITをリセット
+  CD1A  3E00          	INIT2:	LD		A,00H      ;PORTA <- 0
+  CD1C  D3D8          			OUT		(PPI_A),A
+  CD1E  D3DA          			OUT		(PPI_C),A   ;PORTC <- 0
+  CD20  C9            			RET
+                      	
+                      	;**** 1BYTE受信 ****
+                      	;受信DATAをAレジスタにセットしてリターン
+  CD21                	RCVBYTE:
+  CD21  CD56CD        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
+  CD24  DBD9          			IN		A,(PPI_B)   ;PORTB -> A
+  CD26  F5            			PUSH 	AF
+  CD27  3E05          			LD		A,05H
+  CD29  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+  CD2B  CD5DCD        			CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
+  CD2E  3E04          			LD		A,04H
+  CD30  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+  CD32  F1            			POP 	AF
+  CD33  C9            			RET
+                      			
+                      	;**** 1BYTE送信 ****
+                      	;Aレジスタの内容をPORTA下位4BITに4BITずつ送信
+  CD34                	SNDBYTE:
+  CD34  F5            			PUSH	AF
+  CD35  1F            			RRA
+  CD36  1F            			RRA
+  CD37  1F            			RRA
+  CD38  1F            			RRA
+  CD39  E60F          			AND		0FH
+  CD3B  CD45CD        			CALL	SND4BIT
+  CD3E  F1            			POP		AF
+  CD3F  E60F          			AND		0FH
+  CD41  CD45CD        			CALL	SND4BIT
+  CD44  C9            			RET
+                      	
+                      	;**** 4BIT送信 ****
+                      	;Aレジスタ下位4ビットを送信する
+  CD45                	SND4BIT:
+  CD45  D3D8          			OUT		(PPI_A),A
+  CD47  3E05          			LD		A,05H
+  CD49  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+  CD4B  CD56CD        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
+  CD4E  3E04          			LD		A,04H
+  CD50  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+  CD52  CD5DCD        			CALL	F2CHK
+  CD55  C9            			RET
+                      			
+                      	;**** BUSYをCHECK(1) ****
+                      	; 82H BIT7が1になるまでLOP
+  CD56  DBDA          	F1CHK:	IN		A,(PPI_C)
+  CD58  E680          			AND		80H        ;PORTC BIT7 = 1?
+  CD5A  28FA          			JR		Z,F1CHK
+  CD5C  C9            			RET
+                      	
+                      	;**** BUSYをCHECK(0) ****
+                      	; 82H BIT7が0になるまでLOOP
+  CD5D  DBDA          	F2CHK:	IN		A,(PPI_C)
+  CD5F  E680          			AND		80H        ;PORTC BIT7 = 0?
+  CD61  20FA          			JR		NZ,F2CHK
+  CD63  C9            			RET
+                      	
+                      	;******** MESSAGE DATA ********************
+  CD64                	WRMSG:
+  CD64  57524954494E47			DB		'WRITING '
+  CD6C  0D            			DB		0DH
+                      	
+  CD6D                	MSG_F0:
+  CD6D  53442D43415244			DB		'SD-CARD INITIALIZE ERROR'
+  CD85  0D            			DB		0DH
+                      			
+  CD86                	MSG_F1:
+  CD86  4E4F542046494E			DB		'NOT FIND FILE'
+  CD93  0D            			DB		0DH
+                      			
+  CD94                	MSG_DNAME:
+  CD94  444F532046494C			DB		'DOS FILE:'
+  CD9D                	MSG_DNAMEEND:
+  CD9D  20202020202020			DB		'                            '
+  CDB9  0D            			DB		0DH
+                      			
+  CDBA                	MSG_SNAME:
+  CDBA  53415645204E41			DB		'SAVE NAME:'
+  CDC4                	MSG_SNAMEEND:
+  CDC4  20202020202020			DB		'                            '
+  CDE0  0D            			DB		0DH
+                      			
+  CDE1                	MSG99:
+  CDE1  204552524F52  			DB		' ERROR'
+  CDE7  0D            			DB		0DH
+                      			
+                      	;*********************** 0436H MONITOR ライト インフォメーション代替処理 ************
+  CDE8                	MSHED:
+  CDE8  D5            			PUSH	DE
+  CDE9  C5            			PUSH	BC
+  CDEA  E5            			PUSH	HL
+  CDEB  CD16CD        			CALL	INIT
+  CDEE  3E91          			LD		A,91H      ;HEADER SAVEコマンド91H
+  CDF0  CD59CF        			CALL	MCMD       ;コマンドコード送信
+  CDF3  A7            			AND		A          ;00以外ならERROR
+  CDF4  C265CF        			JP		NZ,MERR
+                      	
+  CDF7  3E03          			LD		A,03H          ;一行分をクリアするため3文字削除、37文字出力
+  CDF9  327111        			LD		(DSPX),A
+  CDFC  3EC7          			LD		A,0C7H
+  CDFE  CDDC0D        			CALL	DPCT
+  CE01  CDDC0D        			CALL	DPCT
+  CE04  CDDC0D        			CALL	DPCT
+  CE07  11BACD        			LD		DE,MSG_SNAME   ;'SAVE NAME:'
+  CE0A  CD1500        			CALL	MSGPR
+  CE0D  3E0A          			LD		A,0AH          ;カーソルを10文字目に戻す
+  CE0F  327111        			LD		(DSPX),A
+                      	
+  CE12  11AE11        			LD		DE,MBUF
+  CE15  CD0300        			CALL	GETL
+                      			
+  CE18  11B811        			LD		DE,MBUF+10
+                      			
+  CE1B  0610          			LD		B,10H
+  CE1D  21F110        			LD		HL,FNAME
+  CE20  1A            	MSH6:	LD		A,(DE)
+  CE21  77            			LD		(HL),A
+  CE22  23            			INC		HL
+  CE23  13            			INC		DE
+  CE24  10FA          			DJNZ	MSH6
+                      	
+  CE26  0611          			LD		B,11H
+  CE28  210111        			LD		HL,FNAME+10H     ;ファイルネーム
+  CE2B  3E0D          			LD		A,0DH            ;17文字目には常に0DHをセットする
+  CE2D  77            			LD		(HL),A
+  CE2E  7E            	MSH0:	LD		A,(HL)
+  CE2F  FE0D          			CP		0DH              ;0DHであればひとつ前の文字の検査に移る
+  CE31  2807          			JR		Z,MSH1
+  CE33  FE20          			CP		20H              ;20Hであれば0DHをセットしてひとつ前の文字の検査に移る
+  CE35  2006          			JR		NZ,MSH2          ;0DH、20H以外の文字であれば終了
+  CE37  3E0D          			LD		A,0DH
+  CE39  77            			LD		(HL),A
+                      			
+  CE3A  2B            	MSH1:	DEC		HL
+  CE3B  10F1          			DJNZ	MSH0
+                      	
+  CE3D  CD0600        	MSH2:	CALL	LETLN
+  CE40  1164CD        			LD		DE,WRMSG   ;'WRITING '
+  CE43  CD1500        			CALL	MSGPR        ;メッセージ表示
+  CE46  11F110        			LD		DE,FNAME     ;ファイルネーム
+  CE49  CD1500        			CALL	MSGPR       ;メッセージ表示
+                      	
+  CE4C  21F010        			LD		HL,IBUFE
+  CE4F  0680          			LD		B,80H
+  CE51  7E            	MSH3:	LD		A,(HL)     ;インフォメーション ブロック送信
+  CE52  CD34CD        			CALL	SNDBYTE
+  CE55  23            			INC		HL
+  CE56  10F9          			DJNZ	MSH3
+                      	
+  CE58  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CE5B  A7            			AND		A          ;00以外ならERROR
+  CE5C  C265CF        			JP		NZ,MERR
+                      	
+  CE5F  C360CF        			JP		MRET       ;正常RETURN
+                      	
+                      	;******************** 0475H MONITOR ライト データ代替処理 **********************
+  CE62                	MSDAT:
+  CE62  D5            			PUSH	DE
+  CE63  C5            			PUSH	BC
+  CE64  E5            			PUSH	HL
+  CE65  3E92          			LD		A,92H      ;DATA SAVEコマンド92H
+  CE67  CD59CF        			CALL	MCMD       ;コマンドコード送信
+  CE6A  A7            			AND		A          ;00以外ならERROR
+  CE6B  C265CF        			JP		NZ,MERR
+                      	
+  CE6E  210211        			LD		HL,FSIZE   ;FSIZE送信
+  CE71  7E            			LD		A,(HL)
+  CE72  CD34CD        			CALL	SNDBYTE
+  CE75  23            			INC		HL
+  CE76  7E            			LD		A,(HL)
+  CE77  CD34CD        			CALL	SNDBYTE
+                      	
+  CE7A  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CE7D  A7            			AND		A          ;00以外ならERROR
+  CE7E  C265CF        			JP		NZ,MERR
+                      	
+  CE81  ED5B0211      			LD		DE,(FSIZE)
+  CE85  2A0411        			LD		HL,(SADRS)
+  CE88  7E            	MSD1:	LD		A,(HL)
+  CE89  CD34CD        			CALL	SNDBYTE      ;SADRSからFSIZE Byteを送信。分割セーブの場合、直前に0436HでOPENされたファイルを対象として256バイトずつ0475HがCALLされる。
+  CE8C  1B            			DEC		DE
+  CE8D  7A            			LD		A,D
+  CE8E  B3            			OR		E
+  CE8F  23            			INC		HL
+  CE90  20F6          			JR		NZ,MSD1
+                      			
+  CE92  C360CF        			JP		MRET       ;正常RETURN
+                      	
+                      	;************************** 04D8H MONITOR リード インフォメーション代替処理 *****************
+  CE95                	MLHED:
+  CE95  D5            			PUSH	DE
+  CE96  C5            			PUSH	BC
+  CE97  E5            			PUSH	HL
+  CE98  CD16CD        			CALL	INIT
+                      	
+  CE9B  0608          			LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
+  CE9D  11A311        			LD		DE,LBUF
+  CEA0  3E0D          			LD		A,0DH
+  CEA2  12            	MLH0:	LD		(DE),A
+  CEA3  13            			INC		DE
+  CEA4  10FC          			DJNZ	MLH0
+                      	
+  CEA6  3E03          			LD		A,03H          ;一行分をクリアするため3文字削除、37文字出力
+  CEA8  327111        			LD		(DSPX),A
+  CEAB  3EC7          			LD		A,0C7H
+  CEAD  CDDC0D        			CALL	DPCT
+  CEB0  CDDC0D        			CALL	DPCT
+  CEB3  CDDC0D        			CALL	DPCT
+  CEB6  1194CD        	MLH6:	LD		DE,MSG_DNAME   ;'DOS FILE:'
+  CEB9  CD1500        			CALL	MSGPR
+  CEBC  3E09          			LD		A,09H          ;カーソルを9文字目に戻す
+  CEBE  327111        			LD		(DSPX),A
+                      	
+  CEC1  11AE11        			LD		DE,MBUF    ;ファイルネームを指示するための苦肉の策。LOADコマンドとしてはファイルネームなしとして改行したのちに行バッファの位置をずらしてDOSファイルネームを入力する。
+  CEC4  CD0300        			CALL	GETL
+                      			
+  CEC7  11B711        			LD		DE,MBUF+9
+                      			
+  CECA  3E93          	MLH7:	LD		A,93H      ;HEADER LOADコマンド93H
+  CECC  CD59CF        			CALL	MCMD       ;コマンドコード送信
+  CECF  A7            			AND		A          ;00以外ならERROR
+  CED0  C265CF        			JP		NZ,MERR
+                      	
+  CED3                	MLH1:
+  CED3  1A            			LD		A,(DE)
+  CED4  FE20          			CP		20H                 ;行頭のスペースをファイルネームまで読み飛ばし
+  CED6  2003          			JR		NZ,MLH2
+  CED8  13            			INC		DE
+  CED9  18F8          			JR		MLH1
+                      	
+  CEDB  0620          	MLH2:	LD		B,20H
+  CEDD  1A            	MLH4:	LD		A,(DE)     ;FNAME送信
+  CEDE  FE21          			CP		21H
+  CEE0  3002          			JR		NC,MLH3
+  CEE2  3E0D          			LD		A,0DH
+  CEE4                	MLH3:
+  CEE4  CD34CD        			CALL	SNDBYTE
+  CEE7  13            			INC		DE
+  CEE8  10F3          			DJNZ	MLH4
+  CEEA  3E0D          			LD		A,0DH
+  CEEC  CD34CD        			CALL	SNDBYTE
+                      			
+  CEEF  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CEF2  A7            			AND		A          ;00以外ならERROR
+  CEF3  C265CF        			JP		NZ,MERR
+                      	
+  CEF6  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CEF9  A7            			AND		A          ;00以外ならERROR
+  CEFA  C265CF        			JP		NZ,MERR
+                      	
+  CEFD  21F010        			LD		HL,IBUFE
+  CF00  0680          			LD		B,80H
+  CF02  CD21CD        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
+  CF05  77            			LD		(HL),A
+  CF06  23            			INC		HL
+  CF07  10F9          			DJNZ	MLH5
+                      	
+  CF09  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CF0C  A7            			AND		A          ;00以外ならERROR
+  CF0D  C265CF        			JP		NZ,MERR
+                      	
+  CF10  C360CF        			JP		MRET       ;正常RETURN
+                      	
+                      	;**************************** 04F8H MONITOR リード データ代替処理 ********************
+  CF13                	MLDAT:
+  CF13  D5            			PUSH	DE
+  CF14  C5            			PUSH	BC
+  CF15  E5            			PUSH	HL
+  CF16  3E94          			LD		A,94H      ;DATA LOADコマンド94H
+  CF18  CD59CF        			CALL	MCMD       ;コマンドコード送信
+  CF1B  A7            			AND		A          ;00以外ならERROR
+  CF1C  C265CF        			JP		NZ,MERR
+                      	
+  CF1F  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CF22  A7            			AND		A          ;00以外ならERROR
+  CF23  C265CF        			JP		NZ,MERR
+                      	
+  CF26  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CF29  A7            			AND		A          ;00以外ならERROR
+  CF2A  C265CF        			JP		NZ,MERR
+                      	
+  CF2D  110211        			LD		DE,FSIZE   ;FSIZE送信
+  CF30  1A            			LD		A,(DE)
+  CF31  CD34CD        			CALL	SNDBYTE
+  CF34  13            			INC		DE
+  CF35  1A            			LD		A,(DE)
+  CF36  CD34CD        			CALL	SNDBYTE
+  CF39  CD45CF        			CALL	DBRCV      ;FSIZE分のデータを受信し、SADRSから格納。分割ロードの場合、直前に0436HでOPENされたファイルを対象として256バイトずつSADRSが加算されて04F8HがCALLされる。
+                      	
+  CF3C  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CF3F  A7            			AND		A          ;00以外ならERROR
+  CF40  C265CF        			JP		NZ,MERR
+                      	
+  CF43  181B          			JR		MRET       ;正常RETURN
+                      	
+                      	;データ受信
+  CF45  ED5B0211      	DBRCV:	LD		DE,(FSIZE)
+  CF49  2A0411        			LD		HL,(SADRS)
+  CF4C  CD21CD        	DBRLOP:	CALL	RCVBYTE
+  CF4F  77            			LD		(HL),A
+  CF50  1B            			DEC		DE
+  CF51  7A            			LD		A,D
+  CF52  B3            			OR		E
+  CF53  23            			INC		HL
+  CF54  20F6          			JR		NZ,DBRLOP   ;DE=0までLOOP
+  CF56  C9            			RET
+                      	
+                      	;************************** 0588H VRFY CMT ベリファイ代替処理 *******************
+  CF57                	MVRFY:
+  CF57  AF            			XOR		A          ;正常終了フラグ
+                      	
+  CF58  C9            			RET
+                      	
+                      	;******* 代替処理用コマンドコード送信 (IN:A コマンドコード) **********
+  CF59                	MCMD:
+  CF59  CD34CD        			CALL	SNDBYTE    ;コマンドコード送信
+  CF5C  CD21CD        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  CF5F  C9            			RET
+                      	
+                      	;****** 代替処理用正常RETURN処理 **********
+  CF60  E1            	MRET:	POP		HL
+  CF61  C1            			POP		BC
+  CF62  D1            			POP		DE
+  CF63  AF            			XOR		A          ;正常終了フラグ
+                      			
+  CF64  C9            			RET
+                      	
+                      	;******* 代替処理用ERROR処理 **************
+  CF65                	MERR:
+  CF65  FEF0          			CP		0F0H
+  CF67  2005          			JR		NZ,MERR3
+  CF69  116DCD        			LD		DE,MSG_F0
+  CF6C  180F          			JR		MERRMSG
+                      			
+  CF6E  FEF1          	MERR3:	CP		0F1H
+  CF70  2005          			JR		NZ,MERR99
+  CF72  1186CD        			LD		DE,MSG_F1
+  CF75  1806          			JR		MERRMSG
+                      			
+  CF77  CDC303        	MERR99:	CALL	PRTBYT
+  CF7A  11E1CD        			LD		DE,MSG99
+                      			
+  CF7D                	MERRMSG:
+  CF7D  CD1500        			CALL	MSGPR
+  CF80  CD0600        			CALL	LETLN
+  CF83  E1            			POP		HL
+  CF84  C1            			POP		BC
+  CF85  D1            			POP		DE
+  CF86  3E02          			LD		A,02H
+  CF88  37            			SCF
+                      	
+  CF89  C9            			RET
+                      	
+  CF8A                	ENT6:
+  CF8A                			END
+
