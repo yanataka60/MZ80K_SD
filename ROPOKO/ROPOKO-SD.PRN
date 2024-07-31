@@ -35,55 +35,76 @@
                       	;
                       	;PPI_R コントロールレジスタ
                       	
-  CC7C                			ORG		0CC7CH
+  CC4F                			ORG		0CC4FH
                       			
-  CC7C  11D1CC        			LD		DE,NAME
-  CC7F  CDC8CC        			CALL	MLHED2
-  CC82  CD13CF        			CALL	MLDAT
+  CC4F  DBF8          			IN		A,(0F8H)
+  CC51  DBF9          			IN		A,(0F9H)
+  CC53  FEA5          			CP		0A5H
+  CC55  2026          			JR		NZ,ST
+  CC57  3EA0          			LD		A,0A0H
+  CC59  321DCD        			LD		(P1+1),A
+  CC5C  3246CD        			LD		(P2+1),A
+  CC5F  3C            			INC		A
+  CC60  3225CD        			LD		(P3+1),A
+  CC63  3C            			INC		A
+  CC64  321FCD        			LD		(P4+1),A
+  CC67  3257CD        			LD		(P5+1),A
+  CC6A  325ECD        			LD		(P6+1),A
+  CC6D  3C            			INC		A
+  CC6E  3219CD        			LD		(P7+1),A
+  CC71  322ACD        			LD		(P8+1),A
+  CC74  3231CD        			LD		(P9+1),A
+  CC77  324ACD        			LD		(P10+1),A
+  CC7A  3251CD        			LD		(P11+1),A
                       	
-  CC85  3AAA14        			LD		A,(14AAH)
-  CC88  FE27          			CP		27H
-  CC8A  2030          			JR		NZ,FERR
-  CC8C  3AB514        			LD		A,(14B5H)
-  CC8F  FE2A          			CP		2AH
-  CC91  2029          			JR		NZ,FERR
-  CC93  3A8D19        			LD		A,(198DH)
-  CC96  FE21          			CP		21H
-  CC98  2022          			JR		NZ,FERR
-  CC9A  3A9019        			LD		A,(1990H)
-  CC9D  FE24          			CP		24H
-  CC9F  201B          			JR		NZ,FERR
+  CC7D  11D2CC        	ST:		LD		DE,NAME
+  CC80  CDC9CC        			CALL	MLHED2
+  CC83  CD13CF        			CALL	MLDAT
                       	
-  CCA1  2109CD        			LD		HL,ENT3
-  CCA4  22AA14        			LD		(14AAH),HL
-  CCA7  210CCD        			LD		HL,ENT4
-  CCAA  22B514        			LD		(14B5H),HL
-  CCAD  2103CD        			LD		HL,ENT1
-  CCB0  228D19        			LD		(198DH),HL
-  CCB3  2106CD        			LD		HL,ENT2
-  CCB6  229019        			LD		(1990H),HL
+  CC86  3AAA14        			LD		A,(14AAH)
+  CC89  FE27          			CP		27H
+  CC8B  2030          			JR		NZ,FERR
+  CC8D  3AB514        			LD		A,(14B5H)
+  CC90  FE2A          			CP		2AH
+  CC92  2029          			JR		NZ,FERR
+  CC94  3A8D19        			LD		A,(198DH)
+  CC97  FE21          			CP		21H
+  CC99  2022          			JR		NZ,FERR
+  CC9B  3A9019        			LD		A,(1990H)
+  CC9E  FE24          			CP		24H
+  CCA0  201B          			JR		NZ,FERR
+                      	
+  CCA2  2109CD        			LD		HL,ENT3
+  CCA5  22AA14        			LD		(14AAH),HL
+  CCA8  210CCD        			LD		HL,ENT4
+  CCAB  22B514        			LD		(14B5H),HL
+  CCAE  2103CD        			LD		HL,ENT1
+  CCB1  228D19        			LD		(198DH),HL
+  CCB4  2106CD        			LD		HL,ENT2
+  CCB7  229019        			LD		(1990H),HL
                       			
-  CCB9  C30012        			JP		1200H
-  CCBC                	FERR:
-  CCBC  CD0600        			CALL	LETLN
-  CCBF  11DBCC        			LD		DE,FEMSG   ;
-  CCC2  CD1500        			CALL	MSGPR        ;メッセージ表示
-  CCC5  C3AD00        			JP		00ADH
+  CCBA  C30012        			JP		1200H
                       	
-  CCC8                	MLHED2:
-  CCC8  D5            			PUSH	DE
-  CCC9  C5            			PUSH	BC
-  CCCA  E5            			PUSH	HL
-  CCCB  CD16CD        			CALL	INIT
-  CCCE  C3CACE        			JP		MLH7
+  CCBD                	FERR:
+  CCBD  CD0600        			CALL	LETLN
+  CCC0  11DCCC        			LD		DE,FEMSG   ;
+  CCC3  CD1500        			CALL	MSGPR        ;メッセージ表示
+  CCC6  C3AD00        			JP		00ADH
                       	
-  CCD1  524F504F4B4F2D	NAME:	DB		'ROPOKO-PR',0DH
-  CCDB                	FEMSG:
-  CCDB  4E4F5420524F50			DB		'NOT ROPOKO-PR OR DIFFERRENT VERSION'
-  CCFE  0D            			DB		0DH
+  CCC9                	MLHED2:
+  CCC9  D5            			PUSH	DE
+  CCCA  C5            			PUSH	BC
+  CCCB  E5            			PUSH	HL
+  CCCC  CD16CD        			CALL	INIT
+  CCCF  C3CACE        			JP		MLH7
+                      	
+  CCD2  524F504F4B4F2D	NAME:	DB		'ROPOKO-PR',0DH
+  CCDC                	FEMSG:
+  CCDC  4E4F5420524F50			DB		'NOT ROPOKO-PR OR DIFFERRENT VERSION'
+  CCFF  0D            			DB		0DH
                       	
                       	
-  CCFF                	ENTX:
+  CD00                	ENTX:
                       	
   CD00                	       ORG		0CD00H
                       	
@@ -102,24 +123,24 @@
                       	;**** 8255初期化 ****
                       	;PORTC下位BITをOUTPUT、上位BITをINPUT、PORTBをINPUT、PORTAをOUTPUT
   CD16  3E8A          	INIT:	LD		A,8AH
-  CD18  D3DB          			OUT		(PPI_R),A
+  CD18  D3DB          	P7:		OUT		(PPI_R),A
                       	;出力BITをリセット
   CD1A  3E00          	INIT2:	LD		A,00H      ;PORTA <- 0
-  CD1C  D3D8          			OUT		(PPI_A),A
-  CD1E  D3DA          			OUT		(PPI_C),A   ;PORTC <- 0
+  CD1C  D3D8          	P1:		OUT		(PPI_A),A
+  CD1E  D3DA          	P4:		OUT		(PPI_C),A   ;PORTC <- 0
   CD20  C9            			RET
                       	
                       	;**** 1BYTE受信 ****
                       	;受信DATAをAレジスタにセットしてリターン
   CD21                	RCVBYTE:
   CD21  CD56CD        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
-  CD24  DBD9          			IN		A,(PPI_B)   ;PORTB -> A
+  CD24  DBD9          	P3:		IN		A,(PPI_B)   ;PORTB -> A
   CD26  F5            			PUSH 	AF
   CD27  3E05          			LD		A,05H
-  CD29  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+  CD29  D3DB          	P8:		OUT		(PPI_R),A    ;PORTC BIT2 <- 1
   CD2B  CD5DCD        			CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
   CD2E  3E04          			LD		A,04H
-  CD30  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+  CD30  D3DB          	P9:		OUT		(PPI_R),A    ;PORTC BIT2 <- 0
   CD32  F1            			POP 	AF
   CD33  C9            			RET
                       			
@@ -141,25 +162,27 @@
                       	;**** 4BIT送信 ****
                       	;Aレジスタ下位4ビットを送信する
   CD45                	SND4BIT:
-  CD45  D3D8          			OUT		(PPI_A),A
+  CD45  D3D8          	P2:		OUT		(PPI_A),A
   CD47  3E05          			LD		A,05H
-  CD49  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+  CD49  D3DB          	P10:	OUT		(PPI_R),A    ;PORTC BIT2 <- 1
   CD4B  CD56CD        			CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
   CD4E  3E04          			LD		A,04H
-  CD50  D3DB          			OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+  CD50  D3DB          	P11:	OUT		(PPI_R),A    ;PORTC BIT2 <- 0
   CD52  CD5DCD        			CALL	F2CHK
   CD55  C9            			RET
                       			
                       	;**** BUSYをCHECK(1) ****
                       	; 82H BIT7が1になるまでLOP
-  CD56  DBDA          	F1CHK:	IN		A,(PPI_C)
+  CD56                	F1CHK:
+  CD56  DBDA          	P5:		IN		A,(PPI_C)
   CD58  E680          			AND		80H        ;PORTC BIT7 = 1?
   CD5A  28FA          			JR		Z,F1CHK
   CD5C  C9            			RET
                       	
                       	;**** BUSYをCHECK(0) ****
                       	; 82H BIT7が0になるまでLOOP
-  CD5D  DBDA          	F2CHK:	IN		A,(PPI_C)
+  CD5D                	F2CHK:
+  CD5D  DBDA          	P6:		IN		A,(PPI_C)
   CD5F  E680          			AND		80H        ;PORTC BIT7 = 0?
   CD61  20FA          			JR		NZ,F2CHK
   CD63  C9            			RET

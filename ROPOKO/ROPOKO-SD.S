@@ -1,3 +1,4 @@
+;2024.7.31 MZ-1500_SDに対応
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -34,13 +35,33 @@ PPI_R		EQU		PPI_A+3
 ;
 ;PPI_R コントロールレジスタ
 
-		ORG		0CC7CH
+		ORG		0CC4FH
 		
-		LD		DE,NAME
+		IN		A,(0F8H)			;MZ-1500_SDの存在チェック
+		IN		A,(0F9H)
+		CP		0A5H
+		JR		NZ,ST
+		LD		A,0A0H				;MZ-1500_SDがあればPPI:A0h-A3h,なければMZ-80K_SDとしてPPI:D8h-DBh
+		LD		(P1+1),A
+		LD		(P2+1),A
+		INC		A
+		LD		(P3+1),A
+		INC		A
+		LD		(P4+1),A
+		LD		(P5+1),A
+		LD		(P6+1),A
+		INC		A
+		LD		(P7+1),A
+		LD		(P8+1),A
+		LD		(P9+1),A
+		LD		(P10+1),A
+		LD		(P11+1),A
+
+ST:		LD		DE,NAME				;ROPOKO-PRをロード
 		CALL	MLHED2
 		CALL	MLDAT
 
-		LD		A,(14AAH)
+		LD		A,(14AAH)			;パッチ当て箇所のチェック
 		CP		27H
 		JR		NZ,FERR
 		LD		A,(14B5H)
@@ -53,7 +74,7 @@ PPI_R		EQU		PPI_A+3
 		CP		24H
 		JR		NZ,FERR
 
-		LD		HL,ENT3
+		LD		HL,ENT3				;CMT->SDへパッチ当て
 		LD		(14AAH),HL
 		LD		HL,ENT4
 		LD		(14B5H),HL
@@ -62,11 +83,12 @@ PPI_R		EQU		PPI_A+3
 		LD		HL,ENT2
 		LD		(1990H),HL
 		
-		JP		1200H
+		JP		1200H				;ROPOKO-PRを起動
+
 FERR:
 		CALL	LETLN
-		LD		DE,FEMSG   ;
-		CALL	MSGPR        ;メッセージ表示
+		LD		DE,FEMSG			;エラー表示
+		CALL	MSGPR
 		JP		00ADH
 
 MLHED2:
@@ -101,24 +123,24 @@ START:	CALL	INIT
 ;**** 8255初期化 ****
 ;PORTC下位BITをOUTPUT、上位BITをINPUT、PORTBをINPUT、PORTAをOUTPUT
 INIT:	LD		A,8AH
-		OUT		(PPI_R),A
+P7:		OUT		(PPI_R),A
 ;出力BITをリセット
 INIT2:	LD		A,00H      ;PORTA <- 0
-		OUT		(PPI_A),A
-		OUT		(PPI_C),A   ;PORTC <- 0
+P1:		OUT		(PPI_A),A
+P4:		OUT		(PPI_C),A   ;PORTC <- 0
 		RET
 
 ;**** 1BYTE受信 ****
 ;受信DATAをAレジスタにセットしてリターン
 RCVBYTE:
 		CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
-		IN		A,(PPI_B)   ;PORTB -> A
+P3:		IN		A,(PPI_B)   ;PORTB -> A
 		PUSH 	AF
 		LD		A,05H
-		OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+P8:		OUT		(PPI_R),A    ;PORTC BIT2 <- 1
 		CALL	F2CHK      ;PORTC BIT7が0になるまでLOOP
 		LD		A,04H
-		OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+P9:		OUT		(PPI_R),A    ;PORTC BIT2 <- 0
 		POP 	AF
 		RET
 		
@@ -140,25 +162,27 @@ SNDBYTE:
 ;**** 4BIT送信 ****
 ;Aレジスタ下位4ビットを送信する
 SND4BIT:
-		OUT		(PPI_A),A
+P2:		OUT		(PPI_A),A
 		LD		A,05H
-		OUT		(PPI_R),A    ;PORTC BIT2 <- 1
+P10:	OUT		(PPI_R),A    ;PORTC BIT2 <- 1
 		CALL	F1CHK      ;PORTC BIT7が1になるまでLOOP
 		LD		A,04H
-		OUT		(PPI_R),A    ;PORTC BIT2 <- 0
+P11:	OUT		(PPI_R),A    ;PORTC BIT2 <- 0
 		CALL	F2CHK
 		RET
 		
 ;**** BUSYをCHECK(1) ****
 ; 82H BIT7が1になるまでLOP
-F1CHK:	IN		A,(PPI_C)
+F1CHK:
+P5:		IN		A,(PPI_C)
 		AND		80H        ;PORTC BIT7 = 1?
 		JR		Z,F1CHK
 		RET
 
 ;**** BUSYをCHECK(0) ****
 ; 82H BIT7が0になるまでLOOP
-F2CHK:	IN		A,(PPI_C)
+F2CHK:
+P6:		IN		A,(PPI_C)
 		AND		80H        ;PORTC BIT7 = 0?
 		JR		NZ,F2CHK
 		RET

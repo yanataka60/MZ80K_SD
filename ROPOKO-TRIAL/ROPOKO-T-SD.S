@@ -1,3 +1,4 @@
+;2024.7.31 コメント追加
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -36,11 +37,11 @@ PPI_R		EQU		PPI_A+3
 
 		ORG		0CC4FH
 		
-		IN		A,(0F8H)
+		IN		A,(0F8H)			;MZ-1500_SDの存在チェック
 		IN		A,(0F9H)
 		CP		0A5H
 		JR		NZ,ST
-		LD		A,0A0H
+		LD		A,0A0H				;MZ-1500_SDがあればPPI:A0h-A3h,なければMZ-80K_SDとしてPPI:D8h-DBh
 		LD		(P1+1),A
 		LD		(P2+1),A
 		INC		A
@@ -56,11 +57,11 @@ PPI_R		EQU		PPI_A+3
 		LD		(P10+1),A
 		LD		(P11+1),A
 
-ST:		LD		DE,NAME
+ST:		LD		DE,NAME				;ROPOKO-TRをロード
 		CALL	MLHED2
 		CALL	MLDAT
 
-		LD		A,(1438H)
+		LD		A,(1438H)			;パッチ当て箇所のチェック
 		CP		27H
 		JR		NZ,FERR
 		LD		A,(1443H)
@@ -73,7 +74,7 @@ ST:		LD		DE,NAME
 		CP		24H
 		JR		NZ,FERR
 
-		LD		HL,ENT3
+		LD		HL,ENT3				;CMT->SDへパッチ当て
 		LD		(1438H),HL
 		LD		HL,ENT4
 		LD		(1443H),HL
@@ -82,12 +83,12 @@ ST:		LD		DE,NAME
 		LD		HL,ENT2
 		LD		(192CH),HL
 		
-		JP		1200H
+		JP		1200H				;ROPOKO-TRを起動
 
 FERR:
 		CALL	LETLN
-		LD		DE,FEMSG   ;
-		CALL	MSGPR        ;メッセージ表示
+		LD		DE,FEMSG			;エラー表示
+		CALL	MSGPR
 		JP		00ADH
 
 MLHED2:
