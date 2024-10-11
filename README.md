@@ -6,6 +6,14 @@
 
 　アダプタを繋ぐだけでもBASIC SP-5030が約4秒で起動できるようになるなどアプリケーションランチャーとして便利に使えますが、MONITOR SP-1002にパッチをあてることでBASIC SP-5030はもちろん、ほとんどのMZ-80KアプリケーションがSD-CARD対応となります。
 
+　画像に写っているMZ-80Kのカセット部に被せるようにMZ-80K_SDを設置できるトレイの3Dデータは、BOOTHで公開しています。
+
+https://yanataka.booth.pm/items/6058283
+
+　MZ-1200用はこちらです。
+
+https://yanataka.booth.pm/items/6069703
+
 ### 本体ROMをパッチを当てたMONITOR SP-1002に交換しなくてもアプリケーションからのロード、セーブをSD対応とさせるパッチあてWindows用ツール「CMT2SD_CHECK」を公開しました。(2022.6.29)
 ### 詳細は、CMT2SD_CHECKフォルダ中のREADME.mdを参照してください。
 
@@ -20,7 +28,13 @@
 
 　また、MZ-700もFDxコマンドは機能しますのでMZ-700用アプリケーションランチャーとして使えますが、MZ-80K対応とうたっていない64KオールRAMを前提としているMZ-700用アプリケーションはロードできない可能性があります。
 
+　Rev1.5.5基板及びRev1.5.3基板で「ROM切り離しスイッチ改造」を行った方は、MZ-700用アプリケーション起動後はスイッチを「700」側に切り替えてください。再度SDから起動するときには「80K」に戻すのをお忘れなく。
+
 　なお、一部のMZ-80K用ソフトはMZ-700で実行するにあたって、0h!MZ別冊 ADVANCED MZ-700に掲載されているSP-1002のMZ-700対応版 NZ-700が必要となるものがあります。
+
+#### (2024.10.10追記:MZ-700+MZ-80K_SDでMZ-700用アプリケーションを実行したときにMZ-80K_SDのROMとMZ-700本体のRAMが衝突しないようRev1.5.5基板では「ROM切り離しスイッチ」を取り入れましたが、これを自動で行うMZ-700_SD基板も公開しています。ただし、MZ-700_SDを作成するにはGAL16V8の入手が必要です。
+
+https://github.com/yanataka60/MZ-700_SD
 
 #### 注）
 
@@ -34,57 +48,46 @@
 [回路図](https://github.com/yanataka60/MZ80K_SD/blob/main/KiCad/MZ80k_SD/MZ80K_SD.pdf)
 ![回路図](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MZ-80K_SD_schematic.jpg)
 
-　Rev1.5.2になりました。Rev1.5.1との違いは、外部電源での運用時にArduinoと本体の初期化のタイミングのズレにより誤動作してしまうことをArduinoのReset端子を本体のReset信号に接続し解消したことになります。
+　Rev1.5.5になりました。後述の「ROM切り離しスイッチ改造」を取り入れています。
 
-　なお、Rev1.5.1の1か所をパターンカットし、2本配線を追加することでRev1.5.2相当とする方法をKAIZOUフォルダに示しました。
+　~~Rev1.5.3になりました。秋月電子通商　AE-microSD-LLCNVとArduino用Micro SD Card Kitのどちらかを選択して使えます。~~
+
+　~~Rev1.5.2になりました。Rev1.5.1との違いは、外部電源での運用時にArduinoと本体の初期化のタイミングのズレにより誤動作してしまうことをArduinoのReset端子を本体のReset信号に接続し解消したことになります。~~
+
+　~~なお、Rev1.5.1の1か所をパターンカットし、2本配線を追加することでRev1.5.2相当とする方法をKAIZOUフォルダに示しました。~~
 
 ## 部品
-　U1: 74LS04
-
-　U2: 2764又は28C64(ROMの相性については後述)
-
-　U3: 8255
-
-　U4: Arduino_Pro_Mini_5V　Atmega328版を使用 168版は不可。(注1)
-
-　U5 U6: 74LS30
-
-　J2、J5のいづれか
-
-　　　J2: Micro SD Card Kit又は同等品(プリント基板では、秋月電子通商　AE-microSD-LLCNVを使ってます)(注2)
-
-　　　J5: MicroSD Card Adapter(Arduino等に使われる5V電源に対応したもの)(注3)
-
-　C1 C2 C3 C4 C5: セラミックコンデンサ 0.1μF
-
-　C6: 電解コンデンサ 16v100μF
-
-　S1 S2: 3Pスライドスイッチ
-
-　J4: DCジャック
-
-　J3: コネクタ 2Pin(ピンヘッダで代用するときはGNDと間違えないよう1Pinで5Vだけにしたほうが良いと思います)
-
-　J1: 50Pinコネクタ
-
-　50Pinケーブル
-
-　2Pin分のピンヘッダ　Arduino_Pro_MiniにはA4、A5用のピンヘッダが付いていないため別途必要です(秋月電子通商 PH-1x40SGなど)
-
-　本体内から5Vを取る場合、ケーブル少々
-
-　本体ROMにパッチをあてる場合、27C32等を2532ソケットに差すためのアダプタ
-
-　Arduino_Pro_Miniを取り外し可能としたい場合、26Pin分のピンソケットを用意します(秋月電子通商 FHU-1x42SGなど)
-
+|番号|品名|数量|備考|
+| ------------ | ------------ | ------------ | ------------ |
+|U1|74LS04|1||
+|U2|2764又は28C64|1|ROMの相性については後述|
+|U3|8255|1||
+|U4|Arduino_Pro_Mini_5V|1|Atmega328版を使用 168版は不可。(注1)|
+|U5 U6|74LS30|2||
+||J2、J5のいづれか|||
+|J2|Micro SD Card Kit又は同等品|1|秋月電子通商 AE-microSD-LLCNV (注2) (注3)|
+|J5|MicroSD Card Adapter|1|Arduino等に使われる5V電源に対応したもの (注3)|
+|C1-C5|積層セラミックコンデンサ 0.1uF|5||
+|C6|電解コンデンサ 16v100uF|1||
+|S1 S2|3Pスライドスイッチ|2|秋月電子通商 SS12D01G4など|
+|S3|3Pスライドスイッチ|1|MZ-700で使わなければ80K側固定のジャンパでも可|
+|R1|カーボン抵抗 10kΩ|1|S3を使わずに80K側固定でジャンパするなら不要|
+|J4|DCジャック|1||
+|J3|コネクタ 2Pin|1|ピンヘッダで代用するときはGNDと間違えないよう1Pinで5Vだけにしたほうが良い|
+|J1|50Pinコネクタ|1||
+||50Pinケーブル|1||
+||ピンヘッダ|2Pin分|Arduino_Pro_MiniにはA4、A5用のピンヘッダが付いていないため別途調達が必要です 秋月電子通商 PH-1x40SGなど|
+||本体内から5Vを取る場合、ケーブル少々|||
+||本体ROMにパッチをあてる場合、27C32等を2532ソケットに差すためのアダプタ|||
+||ピンソケット(任意)|26Pin分|Arduino_Pro_Miniを取り外し可能としたい場合に調達します 秋月電子通商 FHU-1x42SGなど|
 
 　　　注1)Arduino Pro MiniはA4、A5ピンも使っています。
 
 　　　注2)秋月電子通商　AE-microSD-LLCNVのJ1ジャンパはショートしてください。
 
-　　　注3)Arduino等に使われる5V電源に対応したMicroSD Card Adapterも正しく信号を繋げば使えるとご報告いただきました。
+　　　注3)J2又はJ5のどちらかを選択して取り付けてください。
 
-### MicroSD Card Adapterを使う(Rev1.5.3)
+### MicroSD Card Adapterを使う(Rev1.5.3以降)
 J5に取り付けます。
 
 MicroSD Card Adapterについているピンヘッダを除去してハンダ付けするのが一番確実ですが、J5の穴にMicroSD Card Adapterをぴったりと押しつけ、裏から多めにハンダを流し込むことでハンダ付けをする方法もあります。なお、この方法の時にはしっかりハンダ付けが出来たかテスターで導通を確認しておいた方が安心です。
@@ -162,13 +165,13 @@ MicroSD Card Adapterについているピンヘッダを除去してハンダ付
 
 　MZ-700の外部拡張端子はMZ-80Kとピン配置は同じですが、ピンコネクタではなく、カードエッジコネクタです。
 
-![接続1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(1).JPG)
+![接続1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.5%2BMZ-80K%20Series(1).JPG)
 
-![接続2](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(6).JPG)
+![接続2](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.5%2BMZ-80K%20Series(6).JPG)
 
-![接続3](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-80K%20Series(5).JPG)
+![接続3](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.5%2BMZ-80K%20Series(5).JPG)
 
-![接続4](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.2%2BMZ-700.JPG)
+![接続4](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/Rev1.5.5%2BMZ-700.JPG)
 
 ## 電源
 　MZ-80Kのバスには+5Vが出ていないため、最初はDCジャックから外部電源を供給するつもりだったのですが、本体と電源が一緒のほうが扱いが楽そうだったので本体から+5Vを引き出して供給する用のコネクタと二通りを用意しています。
@@ -684,6 +687,8 @@ DATA 195,091,248
 
 　そこで以下のようにパターンカットとスライドスイッチの増設をすればROM切り離しが出来ます。
 
+#### Rev1.5.5では標準装備としました。
+
 ![rom_discon1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/rom_discon1.jpg)
 
 　U5 LS30 6Pinのすぐ左横を通るパターンをカットします。もうひとつ左を通るパターンに傷をつけないよう注意します。6Pin側にはパターンは無いので6Pinの左横をカットするくらいの気持ちで大丈夫です。
@@ -964,3 +969,7 @@ https://yanataka.booth.pm/items/6058283
 2024.9.1
 
 　専用トレイを公開しました。
+
+2024.10.10
+
+　ROM切り離しスイッチを標準装備としたRev1.5.5基板及び自動切り替えとしたMZ-700_SDの記述を加えました。
