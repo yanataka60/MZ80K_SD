@@ -6,14 +6,6 @@
 
 　アダプタを繋ぐだけでもBASIC SP-5030が約4秒で起動できるようになるなどアプリケーションランチャーとして便利に使えますが、MONITOR SP-1002にパッチをあてることでBASIC SP-5030はもちろん、ほとんどのMZ-80KアプリケーションがSD-CARD対応となります。
 
-　画像に写っているMZ-80Kのカセット部に被せるようにMZ-80K_SDを設置できるトレイの3Dデータは、BOOTHで公開しています。
-
-https://yanataka.booth.pm/items/6058283
-
-　MZ-1200用はこちらです。
-
-https://yanataka.booth.pm/items/6069703
-
 ### 本体ROMをパッチを当てたMONITOR SP-1002に交換しなくてもアプリケーションからのロード、セーブをSD対応とさせるパッチあてWindows用ツール「CMT2SD_CHECK」を公開しました。(2022.6.29)
 ### 詳細は、CMT2SD_CHECKフォルダ中のREADME.mdを参照してください。
 
@@ -729,6 +721,10 @@ DATA 195,091,248
 　カセット部に被せて使うMZ-80K_SD用トレイを公開しました。
 
 https://yanataka.booth.pm/items/6058283
+
+　MZ-1200用はこちらです。
+
+https://yanataka.booth.pm/items/6069703
 
 ## 謝辞
 　基板の作成に当たり以下のデータを使わせていただきました。ありがとうございました。
