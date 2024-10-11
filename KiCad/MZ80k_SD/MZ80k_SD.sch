@@ -6,7 +6,7 @@ encoding utf-8
 Sheet 1 1
 Title "MZ-80K_SD"
 Date "2022-01-14"
-Rev "Rev1.5.3"
+Rev "Rev1.5.5"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -333,7 +333,7 @@ Wire Wire Line
 	6400 3200 6300 3200
 Connection ~ 6300 3200
 Wire Wire Line
-	6300 3200 6300 1600
+	6300 3200 6300 3100
 $Comp
 L power:GND #PWR04
 U 1 1 622D4BBF
@@ -907,8 +907,6 @@ Wire Wire Line
 Connection ~ 4900 5300
 Wire Wire Line
 	5500 4900 6100 4900
-Wire Wire Line
-	6100 4900 6100 3400
 $Comp
 L 74xx:74LS30 U6
 U 2 1 621D8C3B
@@ -1394,4 +1392,43 @@ Text Label 12600 3450 0    50   ~ 0
 SCK
 Text Label 12600 3550 0    50   ~ 0
 CS
+$Comp
+L Memory_RAM2:SLIDE_SWITCH_3P S3
+U 1 1 66BA1EE1
+P 6300 4700
+F 0 "S3" H 6150 4650 50  0000 C CNN
+F 1 "80K/700" H 6500 4650 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 6300 4725 50  0001 C CNN
+F 3 "" H 6300 4725 50  0001 C CNN
+	1    6300 4700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 3400 6100 4200
+Wire Wire Line
+	6100 4200 6750 4200
+Wire Wire Line
+	6750 4200 6750 5200
+Wire Wire Line
+	6750 5200 6300 5200
+Wire Wire Line
+	6300 5200 6300 5050
+$Comp
+L Device:R R1
+U 1 1 66BE3A29
+P 6100 3250
+F 0 "R1" H 5900 3350 50  0000 L CNN
+F 1 "10k" H 5900 3200 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" V 6030 3250 50  0001 C CNN
+F 3 "~" H 6100 3250 50  0001 C CNN
+	1    6100 3250
+	1    0    0    -1  
+$EndComp
+Connection ~ 6100 3400
+Wire Wire Line
+	6100 3100 6300 3100
+Connection ~ 6300 3100
+Wire Wire Line
+	6300 3100 6300 1600
+NoConn ~ 6500 4900
 $EndSCHEMATC
