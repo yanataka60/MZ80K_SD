@@ -11,6 +11,7 @@
 // 2022. 2. 8 FDLコマンド仕様変更 FDL xの場合、ファイル名先頭1文字～32文字までに拡張
 // 2023. 6.19 MZ-2000_SDの起動方式追加によりBOOT LOADER読み込みを追加。MZ-80K_SDには影響なし。
 // 2024. 3. 4 sd-card再挿入時の初期化処理を追加
+// 2025.12. 4 mon_ldata処理で不要なaddmztが入っていたため削除
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -793,7 +794,8 @@ void mon_lhead(void){
 
 //04F8H MONITOR リード データ代替処理
 void mon_ldata(void){
-  addmzt(m_name);
+// 2025.12.4 addmztが不要な処理であったため削除
+//  addmzt(m_name);
 //ファイルが存在しなければERROR
   if (SD.exists(m_name) == true){
     snd1byte(0x00);
