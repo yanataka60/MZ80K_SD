@@ -12,16 +12,23 @@
 // 2023. 6.19 MZ-2000_SDの起動方式追加によりBOOT LOADER読み込みを追加。MZ-80K_SDには影響なし。
 // 2024. 3. 4 sd-card再挿入時の初期化処理を追加
 // 2025.12. 4 mon_ldata処理で不要なaddmztが入っていたため削除
+// 2026. 8. 8 連番複数ファイルの多段ロード対応
+// 2026. 8. 8 IFB、DATA、DATA…方式多段ロード対応
+// 2026. 8. 9 IFB、ダミーヘッダ、DATA、ダミーヘッダ、DATA…方式多段ロード対応(本来要らないダミーヘッダがついたもの)
+//            IFB、DATA、IFB、DATA…方式多段ロード対応(MZTファイルを単純にマージしたもの)
 //
 #include "SdFat.h"
 #include <SPI.h>
 SdFat SD;
 unsigned long m_lop=128;
 char m_name[40];
+char k_name[40];
 byte s_data[260];
 char f_name[40];
 char c_name[40];
 char new_name[40];
+int kflg=0;
+unsigned long f_end;
 
 #define CABLESELECTPIN  (10)
 #define CHKPIN          (15)
@@ -146,25 +153,51 @@ char upper(char c){
   return c;
 }
 
-//ファイル名の最後が「.mzt」でなければ付加
-void addmzt(char *f_name){
+//多段ロードチェック「.mzt」を除いたファイル名の最後に「#?」(?=1～9)が付加されていれば多段ロード(kflg=1)
+//                                  ファイル名の最後が「#」なら複数MZTファイルをマージしたmzt(kflg=2)
+//                                  ファイル名の最後が「$」ならダミーヘッダ付き複合mzt(kflg=3)
+void kchk(char *r_name,char *w_name){
   unsigned int lp1=0;
-  while (f_name[lp1] != 0x0D){
+
+  strcpy(r_name,w_name);
+  while (w_name[lp1] != 0x0D){
     lp1++;
   }
-  if (f_name[lp1-4]!='.' ||
-    ( f_name[lp1-3]!='M' &&
-      f_name[lp1-3]!='m' ) ||
-    ( f_name[lp1-2]!='Z' &&
-      f_name[lp1-2]!='z' ) ||
-    ( f_name[lp1-1]!='T' &&
-      f_name[lp1-1]!='t' ) ){
-         f_name[lp1++] = '.';
-         f_name[lp1++] = 'm';
-         f_name[lp1++] = 'z';
-         f_name[lp1++] = 't';
+  kflg =0;
+  if (w_name[lp1-7]=='#'){
+    if (w_name[lp1-6]>='1' && w_name[lp1-6]<='9'){
+      r_name[lp1-6] = w_name[lp1-6]+1;
+//次番号のファイルが存在すれば継続ロードフラグ kflg=1
+      if (SD.exists(k_name) == true){
+        kflg=1;
+      }
+    }
+  } else if (w_name[lp1-6]=='#'){
+    kflg=2;
+  } else if (w_name[lp1-6]=='$'){
+    kflg=3;
   }
-  f_name[lp1] = 0x00;
+}
+
+//ファイル名の最後が「.mzt」でなければ付加
+void addmzt(char *w_name){
+  unsigned int lp1=0;
+  while (w_name[lp1] != 0x0D){
+    lp1++;
+  }
+  if (w_name[lp1-4]!='.' ||
+    ( w_name[lp1-3]!='M' &&
+      w_name[lp1-3]!='m' ) ||
+    ( w_name[lp1-2]!='Z' &&
+      w_name[lp1-2]!='z' ) ||
+    ( w_name[lp1-1]!='T' &&
+      w_name[lp1-1]!='t' ) ){
+         w_name[lp1++] = '.';
+         w_name[lp1++] = 'm';
+         w_name[lp1++] = 'z';
+         w_name[lp1++] = 't';
+  }
+  w_name[lp1] = 0x00;
 }
 
 //SDカードにSAVE
@@ -251,18 +284,22 @@ char p_name[20];
 void f_load(void){
 //ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
-    f_name[lp1] = rcv1byte();
+    m_name[lp1] = rcv1byte();
   }
-  addmzt(f_name);
+  addmzt(m_name);
+//多段ロードチェック
+  kchk(k_name,m_name);
 //ファイルが存在しなければERROR
-  if (SD.exists(f_name) == true){
+  if (SD.exists(m_name) == true){
 //ファイルオープン
-    File file = SD.open( f_name, FILE_READ );
+    File file = SD.open( m_name, FILE_READ );
     if( true == file ){
 //ファイル種類コードの判別を撤廃
 //      if( file.read() == 0x01){
 //状態コード送信(OK)
         snd1byte(0x00);
+//DOSファイルのファイルサイズを更新
+        f_end = file.size();
         int wk1 = 0;
         wk1 = file.read();
         for (unsigned int lp1 = 0;lp1 <= 16;lp1++){
@@ -294,6 +331,12 @@ void f_load(void){
             snd1byte(i_data);
         }
         file.close();
+//ランチャーからのLOADでもIFB、DATA、DATAが正しく機能するように修正
+        m_lop=128+f_length;
+//ダミーヘッダ付きの場合ダミーヘッダは読み飛ばし
+        if (kflg == 3) {
+        m_lop=m_lop+128;
+        }
 //       } else {
 //状態コード送信(ERROR)
 //        snd1byte(0xF2);
@@ -363,8 +406,8 @@ void dirlist(void){
 //比較文字列取得 32+1文字まで
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
     c_name[lp1] = rcv1byte();
-//  Serial.print(c_name[lp1],HEX);
-//  Serial.println("");
+////  Serial.print(c_name[lp1],HEX);
+////  Serial.println("");
   }
 //
   File file = SD.open( "/" );
@@ -444,15 +487,15 @@ void dirlist(void){
 boolean f_match(char *f_name,char *c_name){
   boolean flg1 = true;
   unsigned int lp1 = 0;
-//  Serial.print(f_name);
-//  Serial.print(" ");
-//  Serial.print(c_name);
-//  Serial.print(" ");
+////  Serial.print(f_name);
+////  Serial.print(" ");
+////  Serial.print(c_name);
+////  Serial.print(" ");
   while (lp1 <=32 && c_name[0] != 0x00 && flg1 == true){
-//  Serial.print(f_name[lp1],HEX);
-//  Serial.print("-");
-//  Serial.print(c_name[lp1+1],HEX);
-//  Serial.print(" ");
+////  Serial.print(f_name[lp1],HEX);
+////  Serial.print("-");
+////  Serial.print(c_name[lp1+1],HEX);
+////  Serial.print(" ");
     if (upper(f_name[lp1]) != c_name[lp1+1]){
       flg1 = false;
     }
@@ -461,11 +504,11 @@ boolean f_match(char *f_name,char *c_name){
       break;
     }
   }
-//  if (flg1){
-//    Serial.println("true");
-//  }else{
-//    Serial.println("false");
-//  }
+////  if (flg1){
+////    Serial.println("true");
+////  }else{
+////    Serial.println("false");
+////  }
   return flg1;
 }
 
@@ -767,6 +810,8 @@ void mon_lhead(void){
     m_name[lp1] = rcv1byte();
   }
   addmzt(m_name);
+//多段ロードチェック
+  kchk(k_name,m_name);
 //ファイルが存在しなければERROR
   if (SD.exists(m_name) == true){
     snd1byte(0x00);
@@ -774,6 +819,8 @@ void mon_lhead(void){
     File file = SD.open( m_name, FILE_READ );
     if( true == file ){
       snd1byte(0x00);
+//DOSファイルのファイルサイズを更新
+      f_end = file.size();
       for (unsigned int lp1 = 0;lp1 < 128;lp1++){
           byte i_data = file.read();
           snd1byte(i_data);
@@ -792,28 +839,94 @@ void mon_lhead(void){
   }
 }
 
+//継続ロード処理
+void kflgchk(void){
+//リード データ POINTクリア
+//kflg=2の時は次のIFBまでスキップできるように設定
+  if(kflg!=2){
+    m_lop=128;
+  } else {
+    m_lop=m_lop+128;
+  }
+  if (kflg==1 || kflg==2){
+//多段ロードフラグ送信
+      snd1byte(0x00);
+      strcpy(m_name,k_name);
+//多段ロードチェック
+    kchk(k_name,m_name);
+//ファイルが存在しなければERROR
+    if (SD.exists(m_name) == true){
+      snd1byte(0x00);
+//ファイルオープン
+      File file = SD.open( m_name, FILE_READ );
+      if( true == file ){
+//DOSファイルのファイルサイズを更新
+      f_end = file.size();
+        snd1byte(0x00);
+//kflg=2の時だけm_lop-128読み飛ばし
+        if(kflg==2){
+          file.seek(m_lop-128);
+        }
+
+        for (unsigned int lp1 = 0;lp1 < 128;lp1++){
+            byte i_data = file.read();
+            snd1byte(i_data);
+        }
+        file.close();
+        snd1byte(0x00);
+      } else {
+//状態コード送信(ERROR)
+        snd1byte(0xFF);
+        sdinit();
+      }  
+    } else {
+//状態コード送信(FILE NOT FIND ERROR)
+      snd1byte(0xF1);
+      sdinit();
+    }
+  } else {
+    snd1byte(0xFF);
+  }
+}
+
 //04F8H MONITOR リード データ代替処理
 void mon_ldata(void){
 // 2025.12.4 addmztが不要な処理であったため削除
 //  addmzt(m_name);
 //ファイルが存在しなければERROR
+////  Serial.print("m_name:");
+////  Serial.println(m_name);
   if (SD.exists(m_name) == true){
     snd1byte(0x00);
 //ファイルオープン
     File file = SD.open( m_name, FILE_READ );
-    if( true == file ){
+////  Serial.print("m_lop:");
+////  Serial.println(m_lop);
+////  Serial.print("f_end:");
+////  Serial.println(f_end);
+//ファイルのオープン成功及び
+//DOSフィルのファイルサイズがファイル読み出しポイントより大きいことが必要
+    if( true == file && f_end > m_lop){
       snd1byte(0x00);
       file.seek(m_lop);
+////  Serial.print("m_lop:");
+////  Serial.println(m_lop);
 //読み出しサイズ取得
       int f_length2 = rcv1byte();
       int f_length1 = rcv1byte();
       unsigned int f_length = f_length1*256+f_length2;
+////  Serial.print("f_length:");
+////  Serial.println(f_length);
       for (unsigned int lp1 = 0;lp1 < f_length;lp1++){
         byte i_data = file.read();
         snd1byte(i_data);
       }
       file.close();
       m_lop=m_lop+f_length;
+//kflg=3の時だけダミーヘッダ分読み飛ばし
+      if (kflg == 3) {
+      m_lop=m_lop+128;
+      }
       snd1byte(0x00);
     } else {
 //状態コード送信(ERROR)
@@ -974,6 +1087,13 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         boot();
+        break;
+//96hで継続ロードCHECK
+      case 0x96:
+////  Serial.println("KFLG CHECK");
+//状態コード送信(OK)
+        snd1byte(0x00);
+        kflgchk();
         break;
       default:
 //状態コード送信(CMD ERROR)
