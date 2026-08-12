@@ -11,6 +11,7 @@
 ;2022. 2.10 04D8H MONITOR リード インフォメーション代替処理の中からFDLコマンドを使えるように修正
 ;           FDLコマンド処理をサブルーチン化
 ;2022. 2.11 04D8H MONITOR リード インフォメーション代替処理の中から呼ぶFDLコマンドがMZ-700 MONITOR 1Z-009A、1Z-009B環境下では使えないバグを修正しました。
+;2026. 8. 8 多段ロード対応、外からファイルネームを設定して呼び出すサービスコールを追加
 ;
 GETL		EQU		0003H
 LETLN		EQU		0006H
@@ -38,6 +39,7 @@ LBUF		EQU		11A3H
 MBUF		EQU		11AEH
 MONITOR_80K	EQU		0082H
 MONITOR_700	EQU		00ADH
+EMMADRS		EQU		0CF00H
 
 ;0D8H PORTA 送信データ(下位4ビット)
 ;0D9H PORTB 受信データ(8ビット)
@@ -58,7 +60,7 @@ MONITOR_700	EQU		00ADH
        ORG		0F000H
 
 		NOP                   ;ROM識別コード
-		JP		START
+		JP		START2
 ;******************** MONITOR CMTルーチン代替 *************************************
 ENT1:	JP		MSHED
 ENT2:	JP		MSDAT
@@ -66,7 +68,17 @@ ENT3:	JP		MLHED
 ENT4:	JP		MLDAT
 ENT5:	JP		MVRFY
 		
-START:	CALL	INIT
+;************** プログラム中からファイル名を指定してLOAD ***************
+;						DEレジスタにファイル名を格納したアドレスをセットしてコール、ファイル名の最後には0Dhを含めること
+;************** BASIC SP-5030中からファイル名を指定してLOAD ***************
+;					例)
+;						G$="TEST"		DOSファイル名を表す文字列を文字列変数に代入
+;						USR($FE03,G$)	機械語を配置したアドレスとDOSファイル名を表す文字列を代入した文字列変数を値としてUSR関数を実行(SP-5030の場合文字列関数に代入された文字列の最後に0Dhが入ってます)
+;						USR($F00D)		SDからデータをLOAD
+ENT6:	JP		MLHED2
+
+START:
+;		CALL	INIT		;ENT6を付け加えたためSTART2へ
 		LD		DE,LBUF     ;MZ-80K、MZ-700とも起動コマンドは'*FD'に統一
 		LD		A,(DE)
 		CP		'*'
@@ -94,7 +106,7 @@ STT3:	PUSH	DE          ;設定ファイル名(0000.mzt)を転送
 		LD		BC,NEND-DEFNAME
 		LDIR
 		POP		DE
-		JR		SDLOAD      ;LOAD処理へ
+		JR		Z,SDLOAD
 STETC:
 		CP		'S'         ;FDS:SAVE処理へ
 		JP		Z,STSV
@@ -118,7 +130,7 @@ STETC:
 		JP		Z,STMZ
 		CP		'U'         ;FDU:MZ-700 裏RAM START
 		JP		Z,STURA
-		JP		CMDERR
+		JP		EMMCHK
 
 ;**** 8255初期化 ****
 ;PORTC下位BITをOUTPUT、上位BITをINPUT、PORTBをINPUT、PORTAをOUTPUT
@@ -132,9 +144,14 @@ INIT2:	LD		A,00H      ;PORTA <- 0
 
 ;**** LOAD ****
 ;受信ヘッダ情報をセットし、SDカードからLOAD実行
-SDLOAD:	LD		A,81H  ;LOADコマンド81H
-		CALL	STCMD
-		CALL	HDRCV      ;ヘッダ情報受信
+SDLOAD:	JP		KZCHK2
+
+
+;		LD		A,81H  ;LOADコマンド81H
+;		CALL	STCMD
+		NOP
+		NOP
+SDLOAD2:CALL	HDRCV      ;ヘッダ情報受信
 		CALL	DBRCV      ;データ受信
 		LD		A,(LBUF+3)
 		CP		'/'        ;'*FD/'であれば実行アドレスに飛ばずにMONITORコマンド待ちに戻る
@@ -1083,9 +1100,10 @@ MLHED:
 
 		LD		A,00H
 		LD		DE,0000H
-		CALL	TIMST
+;		CALL	TIMST
+		JP		KZCHK
 
-		LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
+MLH00:	LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
 		LD		DE,LBUF
 		LD		A,0DH
 MLH0:	LD		(DE),A
@@ -1114,7 +1132,7 @@ MLH6:	LD		DE,MSG_DNAME   ;'DOS FILE:'
 		CP		'*'
 		JR		Z,MLHCMD
 
-		LD		A,93H      ;HEADER LOADコマンド93H
+MLH7:	LD		A,93H      ;HEADER LOADコマンド93H
 		CALL	MCMD       ;コマンドコード送信
 		AND		A          ;00以外ならERROR
 		JP		NZ,MERR
@@ -1135,7 +1153,7 @@ MLH4:	LD		A,(DE)     ;FNAME送信
 		LD		A,0DH
 		CALL	SNDBYTE
 		
-		CALL	RCVBYTE    ;状態取得(00H=OK)
+MLH41:	CALL	RCVBYTE    ;状態取得(00H=OK)
 		AND		A          ;00以外ならERROR
 		JP		NZ,MERR
 
@@ -1147,6 +1165,7 @@ MLH4:	LD		A,(DE)     ;FNAME送信
 		LD		B,80H
 MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
 		LD		(HL),A
+;		CALL	PRTBYT
 		INC		HL
 		DEC		B
 		JR		NZ,MLH5
@@ -1328,5 +1347,205 @@ MERRMSG:
 ;		EI
 
 		RET
+
+EMMCHK:
+		CP		'E'         ;FDE:EMM START
+		JR		Z,EMMST
+		CP		'G'
+		JP		Z,PALLET
+		JP		CMDERR
+
+EMMST:
+		INC		DE
+		LD		A,(DE)
+		CP		'0'
+		JR		NZ,EMM1ST
+		LD		HL,0000H			;EMM I/Oアドレス 00H
+		LD		(EMMADRS),HL
+		JR		MENUS
+EMM1ST:	CP		'1'
+		JR		NZ,EMM2ST
+		LD		HL,0004H			;EMM I/Oアドレス 04H
+		LD		(EMMADRS),HL
+		JR		MENUS
+EMM2ST:	CP		'2'
+		JR		NZ,EMM3ST
+		LD		HL,0008H			;EMM I/Oアドレス 08H
+		LD		(EMMADRS),HL
+		JR		MENUS
+EMM3ST:	CP		'3'
+		JP		NZ,CMDERR
+		LD		HL,000CH			;EMM I/Oアドレス 0CH
+		LD		(EMMADRS),HL
+
+MENUS:	
+		LD		BC,(EMMADRS)
+		XOR		A
+		OUT		(C),A
+		INC		BC
+		OUT		(C),A
+		INC		BC
+		OUT		(C),A
+		
+		INC		BC
+		IN		A,(C)
+		CP		01H
+		JP		NZ,CMDERR
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		
+
+		IN		A,(C)
+		LD		E,A
+		IN		A,(C)
+		LD		D,A
+		
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+		IN		A,(C)
+
+		IN		A,(C)
+		LD		H,A
+
+		LD		BC,(EMMADRS)
+		XOR		A
+		OUT		(C),A
+		LD		A,H
+		INC		BC
+		OUT		(C),A
+		XOR		A
+		INC		BC
+		OUT		(C),A
+
+; FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+		LD		A,00H
+		LD		DE,0000H
+		CALL	TIMST
+		OUT		(0E0H),A      ;裏RAM ON
+
+		LD		HL,0000H
+		INC		BC
+EMLOP:	IN		A,(C)
+		LD		(HL),A
+		INC		HL
+		DEC		DE
+		LD		A,D
+		OR		E
+		JR		NZ,EMLOP
+		JP		0000H
+
+PALLET:	INC		DE
+		LD		A,(DE)
+		CP		'5'
+		JR		NC,PALLETW
+		LD		A,40H
+PA1:	LD		HL,0D800H
+		LD		(HL),A
+		LD		DE,0D801H
+		LD		BC,0800H
+		LDIR
+		JP		0000H
+PALLETW:LD		A,70H
+		JR		PA1
+
+;******************** 多段ロードCHECK *********************
+KZCHK:
+		CALL	TIMST
+
+		LD		A,96H      ;継続ロードCHECKコマンド96H
+		CALL	MCMD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,MERR
+
+		CALL	RCVBYTE		;多段ロードフラグ受け取り
+		AND		A			;00以外なら通常LOAD
+		JP		NZ,MLH00	;多段ロードではない。通常処理にRETURN
+
+		JP		MLH41		;多段ロード処理。IFB受信へ
+
+KZCHK2:
+		LD		A,96H
+
+		CALL	STCD       ;コマンドコード送信
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
+
+		CALL	RCVBYTE
+		AND		A
+		JR		NZ,KZCHK3
+
+		CALL	RCVBYTE    ;状態取得(00H=OK)
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
+
+		CALL	RCVBYTE    ;状態取得(00H=OK)
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
+
+		LD		HL,IBUFE
+		LD		B,80H
+KZC5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
+		LD		(HL),A
+;		CALL	PRTBYT
+		INC		HL
+		DEC		B
+		JR		NZ,KZC5
+
+		CALL	RCVBYTE    ;状態取得(00H=OK)
+		AND		A          ;00以外ならERROR
+		JP		NZ,SVERR
+
+		CALL	MLDAT      ;データ受信
+; FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+		LD		A,00H
+		LD		DE,0000H
+		CALL	TIMST
+		
+		LD		HL,(EXEAD)
+		JP		(HL)
+
+KZCHK3:	LD		A,81H  ;LOADコマンド81H
+		CALL	STCMD
+		JP		SDLOAD2
+
+
+;************** プログラム中からファイル名を指定してLOAD ***************
+;							DE <- ファイルネームアドレス
+MLHED2:	DI
+		PUSH	DE
+		PUSH	BC
+		PUSH	HL
+		CALL	INIT
+		PUSH	DE
+		XOR		A
+		LD		DE,0000H
+		CALL	TIMST
+		POP		DE
+		JP		MLH7
+
+START2:	CALL	INIT
+		JP		START
 
 		END

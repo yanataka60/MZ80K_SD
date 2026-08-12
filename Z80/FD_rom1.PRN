@@ -12,6 +12,7 @@
                       	;2022. 2.10 04D8H MONITOR リード インフォメーション代替処理の中からFDLコマンドを使えるように修正
                       	;           FDLコマンド処理をサブルーチン化
                       	;2022. 2.11 04D8H MONITOR リード インフォメーション代替処理の中から呼ぶFDLコマンドがMZ-700 MONITOR 1Z-009A、1Z-009B環境下では使えないバグを修正しました。
+                      	;2026. 8. 8 多段ロード対応、外からファイルネームを設定して呼び出すサービスコールを追加
                       	;
   0003                	GETL		EQU		0003H
   0006                	LETLN		EQU		0006H
@@ -39,6 +40,7 @@
   11AE                	MBUF		EQU		11AEH
   0082                	MONITOR_80K	EQU		0082H
   00AD                	MONITOR_700	EQU		00ADH
+  CF00                	EMMADRS		EQU		0CF00H
                       	
                       	;0D8H PORTA 送信データ(下位4ビット)
                       	;0D9H PORTB 受信データ(8ビット)
@@ -59,7 +61,7 @@
   F000                	       ORG		0F000H
                       	
   F000  00            			NOP                   ;ROM識別コード
-  F001  C313F0        			JP		START
+  F001  C3B1FA        			JP		START2
                       	;******************** MONITOR CMTルーチン代替 *************************************
   F004  C395F7        	ENT1:	JP		MSHED
   F007  C3E3F7        	ENT2:	JP		MSDAT
@@ -67,7 +69,17 @@
   F00D  C304F9        	ENT4:	JP		MLDAT
   F010  C337F9        	ENT5:	JP		MVRFY
                       			
-  F013  CD82F0        	START:	CALL	INIT
+                      	;************** プログラム中からファイル名を指定してLOAD ***************
+                      	;						DEレジスタにファイル名を格納したアドレスをセットしてコール、ファイル名の最後には0Dhを含めること
+                      	;************** BASIC SP-5030中からファイル名を指定してLOAD ***************
+                      	;					例)
+                      	;						G$="TEST"		DOSファイル名を表す文字列を文字列変数に代入
+                      	;						USR($FE03,G$)	機械語を配置したアドレスとDOSファイル名を表す文字列を代入した文字列変数を値としてUSR関数を実行(SP-5030の場合文字列関数に代入された文字列の最後に0Dhが入ってます)
+                      	;						USR($F00D)		SDからデータをLOAD
+  F013  C39EFA        	ENT6:	JP		MLHED2
+                      	
+  F016                	START:
+                      	;		CALL	INIT		;ENT6を付け加えたためSTART2へ
   F016  11A311        			LD		DE,LBUF     ;MZ-80K、MZ-700とも起動コマンドは'*FD'に統一
   F019  1A            			LD		A,(DE)
   F01A  FE2A          			CP		'*'
@@ -95,7 +107,7 @@
   F040  010500        			LD		BC,NEND-DEFNAME
   F043  EDB0          			LDIR
   F045  D1            			POP		DE
-  F046  1845          			JR		SDLOAD      ;LOAD処理へ
+  F046  2845          			JR		Z,SDLOAD
   F048                	STETC:
   F048  FE53          			CP		'S'         ;FDS:SAVE処理へ
   F04A  CAFFF0        			JP		Z,STSV
@@ -119,7 +131,7 @@
   F077  CAC6F4        			JP		Z,STMZ
   F07A  FE55          			CP		'U'         ;FDU:MZ-700 裏RAM START
   F07C  CA35F5        			JP		Z,STURA
-  F07F  C34CF1        			JP		CMDERR
+  F07F  C36BF9        			JP		EMMCHK
                       	
                       	;**** 8255初期化 ****
                       	;PORTC下位BITをOUTPUT、上位BITをINPUT、PORTBをINPUT、PORTAをOUTPUT
@@ -133,9 +145,14 @@
                       	
                       	;**** LOAD ****
                       	;受信ヘッダ情報をセットし、SDカードからLOAD実行
-  F08D  3E81          	SDLOAD:	LD		A,81H  ;LOADコマンド81H
-  F08F  CDB8F5        			CALL	STCMD
-  F092  CDACF0        			CALL	HDRCV      ;ヘッダ情報受信
+  F08D  C356FA        	SDLOAD:	JP		KZCHK2
+                      	
+                      	
+                      	;		LD		A,81H  ;LOADコマンド81H
+                      	;		CALL	STCMD
+  F090  00            			NOP
+  F091  00            			NOP
+  F092  CDACF0        	SDLOAD2:CALL	HDRCV      ;ヘッダ情報受信
   F095  CDEDF0        			CALL	DBRCV      ;データ受信
   F098  3AA611        			LD		A,(LBUF+3)
   F09B  FE2F          			CP		'/'        ;'*FD/'であれば実行アドレスに飛ばずにMONITORコマンド待ちに戻る
@@ -1084,9 +1101,10 @@
                       	
   F81E  3E00          			LD		A,00H
   F820  110000        			LD		DE,0000H
-  F823  CD3300        			CALL	TIMST
+                      	;		CALL	TIMST
+  F823  C340FA        			JP		KZCHK
                       	
-  F826  0608          			LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
+  F826  0608          	MLH00:	LD		B,08H      ;LBUFを0DHで埋めファイルネームが指定されなかったことにする
   F828  11A311        			LD		DE,LBUF
   F82B  3E0D          			LD		A,0DH
   F82D  12            	MLH0:	LD		(DE),A
@@ -1115,7 +1133,7 @@
   F857  FE2A          			CP		'*'
   F859  2845          			JR		Z,MLHCMD
                       	
-  F85B  3E93          			LD		A,93H      ;HEADER LOADコマンド93H
+  F85B  3E93          	MLH7:	LD		A,93H      ;HEADER LOADコマンド93H
   F85D  CD3AF9        			CALL	MCMD       ;コマンドコード送信
   F860  A7            			AND		A          ;00以外ならERROR
   F861  C246F9        			JP		NZ,MERR
@@ -1136,7 +1154,7 @@
   F876  3E0D          			LD		A,0DH
   F878  CD5FF5        			CALL	SNDBYTE
                       			
-  F87B  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  F87B  CD4CF5        	MLH41:	CALL	RCVBYTE    ;状態取得(00H=OK)
   F87E  A7            			AND		A          ;00以外ならERROR
   F87F  C246F9        			JP		NZ,MERR
                       	
@@ -1148,6 +1166,7 @@
   F88C  0680          			LD		B,80H
   F88E  CD4CF5        	MLH5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
   F891  77            			LD		(HL),A
+                      	;		CALL	PRTBYT
   F892  23            			INC		HL
   F893  05            			DEC		B
   F894  20F8          			JR		NZ,MLH5
@@ -1330,5 +1349,205 @@
                       	
   F96A  C9            			RET
                       	
-  F96B                			END
+  F96B                	EMMCHK:
+  F96B  FE45          			CP		'E'         ;FDE:EMM START
+  F96D  2808          			JR		Z,EMMST
+  F96F  FE47          			CP		'G'
+  F971  CA25FA        			JP		Z,PALLET
+  F974  C34CF1        			JP		CMDERR
+                      	
+  F977                	EMMST:
+  F977  13            			INC		DE
+  F978  1A            			LD		A,(DE)
+  F979  FE30          			CP		'0'
+  F97B  2008          			JR		NZ,EMM1ST
+  F97D  210000        			LD		HL,0000H			;EMM I/Oアドレス 00H
+  F980  2200CF        			LD		(EMMADRS),HL
+  F983  1823          			JR		MENUS
+  F985  FE31          	EMM1ST:	CP		'1'
+  F987  2008          			JR		NZ,EMM2ST
+  F989  210400        			LD		HL,0004H			;EMM I/Oアドレス 04H
+  F98C  2200CF        			LD		(EMMADRS),HL
+  F98F  1817          			JR		MENUS
+  F991  FE32          	EMM2ST:	CP		'2'
+  F993  2008          			JR		NZ,EMM3ST
+  F995  210800        			LD		HL,0008H			;EMM I/Oアドレス 08H
+  F998  2200CF        			LD		(EMMADRS),HL
+  F99B  180B          			JR		MENUS
+  F99D  FE33          	EMM3ST:	CP		'3'
+  F99F  C24CF1        			JP		NZ,CMDERR
+  F9A2  210C00        			LD		HL,000CH			;EMM I/Oアドレス 0CH
+  F9A5  2200CF        			LD		(EMMADRS),HL
+                      	
+  F9A8                	MENUS:	
+  F9A8  ED4B00CF      			LD		BC,(EMMADRS)
+  F9AC  AF            			XOR		A
+  F9AD  ED79          			OUT		(C),A
+  F9AF  03            			INC		BC
+  F9B0  ED79          			OUT		(C),A
+  F9B2  03            			INC		BC
+  F9B3  ED79          			OUT		(C),A
+                      			
+  F9B5  03            			INC		BC
+  F9B6  ED78          			IN		A,(C)
+  F9B8  FE01          			CP		01H
+  F9BA  C24CF1        			JP		NZ,CMDERR
+  F9BD  ED78          			IN		A,(C)
+  F9BF  ED78          			IN		A,(C)
+  F9C1  ED78          			IN		A,(C)
+  F9C3  ED78          			IN		A,(C)
+  F9C5  ED78          			IN		A,(C)
+  F9C7  ED78          			IN		A,(C)
+  F9C9  ED78          			IN		A,(C)
+  F9CB  ED78          			IN		A,(C)
+  F9CD  ED78          			IN		A,(C)
+  F9CF  ED78          			IN		A,(C)
+  F9D1  ED78          			IN		A,(C)
+  F9D3  ED78          			IN		A,(C)
+  F9D5  ED78          			IN		A,(C)
+  F9D7  ED78          			IN		A,(C)
+  F9D9  ED78          			IN		A,(C)
+  F9DB  ED78          			IN		A,(C)
+  F9DD  ED78          			IN		A,(C)
+                      			
+                      	
+  F9DF  ED78          			IN		A,(C)
+  F9E1  5F            			LD		E,A
+  F9E2  ED78          			IN		A,(C)
+  F9E4  57            			LD		D,A
+                      			
+  F9E5  ED78          			IN		A,(C)
+  F9E7  ED78          			IN		A,(C)
+  F9E9  ED78          			IN		A,(C)
+  F9EB  ED78          			IN		A,(C)
+  F9ED  ED78          			IN		A,(C)
+  F9EF  ED78          			IN		A,(C)
+  F9F1  ED78          			IN		A,(C)
+  F9F3  ED78          			IN		A,(C)
+  F9F5  ED78          			IN		A,(C)
+  F9F7  ED78          			IN		A,(C)
+                      	
+  F9F9  ED78          			IN		A,(C)
+  F9FB  67            			LD		H,A
+                      	
+  F9FC  ED4B00CF      			LD		BC,(EMMADRS)
+  FA00  AF            			XOR		A
+  FA01  ED79          			OUT		(C),A
+  FA03  7C            			LD		A,H
+  FA04  03            			INC		BC
+  FA05  ED79          			OUT		(C),A
+  FA07  AF            			XOR		A
+  FA08  03            			INC		BC
+  FA09  ED79          			OUT		(C),A
+                      	
+                      	; FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+  FA0B  3E00          			LD		A,00H
+  FA0D  110000        			LD		DE,0000H
+  FA10  CD3300        			CALL	TIMST
+  FA13  D3E0          			OUT		(0E0H),A      ;裏RAM ON
+                      	
+  FA15  210000        			LD		HL,0000H
+  FA18  03            			INC		BC
+  FA19  ED78          	EMLOP:	IN		A,(C)
+  FA1B  77            			LD		(HL),A
+  FA1C  23            			INC		HL
+  FA1D  1B            			DEC		DE
+  FA1E  7A            			LD		A,D
+  FA1F  B3            			OR		E
+  FA20  20F7          			JR		NZ,EMLOP
+  FA22  C30000        			JP		0000H
+                      	
+  FA25  13            	PALLET:	INC		DE
+  FA26  1A            			LD		A,(DE)
+  FA27  FE35          			CP		'5'
+  FA29  3011          			JR		NC,PALLETW
+  FA2B  3E40          			LD		A,40H
+  FA2D  2100D8        	PA1:	LD		HL,0D800H
+  FA30  77            			LD		(HL),A
+  FA31  1101D8        			LD		DE,0D801H
+  FA34  010008        			LD		BC,0800H
+  FA37  EDB0          			LDIR
+  FA39  C30000        			JP		0000H
+  FA3C  3E70          	PALLETW:LD		A,70H
+  FA3E  18ED          			JR		PA1
+                      	
+                      	;******************** 多段ロードCHECK *********************
+  FA40                	KZCHK:
+  FA40  CD3300        			CALL	TIMST
+                      	
+  FA43  3E96          			LD		A,96H      ;継続ロードCHECKコマンド96H
+  FA45  CD3AF9        			CALL	MCMD       ;コマンドコード送信
+  FA48  A7            			AND		A          ;00以外ならERROR
+  FA49  C246F9        			JP		NZ,MERR
+                      	
+  FA4C  CD4CF5        			CALL	RCVBYTE		;多段ロードフラグ受け取り
+  FA4F  A7            			AND		A			;00以外なら通常LOAD
+  FA50  C226F8        			JP		NZ,MLH00	;多段ロードではない。通常処理にRETURN
+                      	
+  FA53  C37BF8        			JP		MLH41		;多段ロード処理。IFB受信へ
+                      	
+  FA56                	KZCHK2:
+  FA56  3E96          			LD		A,96H
+                      	
+  FA58  CD9EF5        			CALL	STCD       ;コマンドコード送信
+  FA5B  A7            			AND		A          ;00以外ならERROR
+  FA5C  C26CF1        			JP		NZ,SVERR
+                      	
+  FA5F  CD4CF5        			CALL	RCVBYTE
+  FA62  A7            			AND		A
+  FA63  2031          			JR		NZ,KZCHK3
+                      	
+  FA65  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  FA68  A7            			AND		A          ;00以外ならERROR
+  FA69  C26CF1        			JP		NZ,SVERR
+                      	
+  FA6C  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  FA6F  A7            			AND		A          ;00以外ならERROR
+  FA70  C26CF1        			JP		NZ,SVERR
+                      	
+  FA73  21F010        			LD		HL,IBUFE
+  FA76  0680          			LD		B,80H
+  FA78  CD4CF5        	KZC5:	CALL	RCVBYTE    ;読みだされたインフォメーションブロックを受信
+  FA7B  77            			LD		(HL),A
+                      	;		CALL	PRTBYT
+  FA7C  23            			INC		HL
+  FA7D  05            			DEC		B
+  FA7E  20F8          			JR		NZ,KZC5
+                      	
+  FA80  CD4CF5        			CALL	RCVBYTE    ;状態取得(00H=OK)
+  FA83  A7            			AND		A          ;00以外ならERROR
+  FA84  C26CF1        			JP		NZ,SVERR
+                      	
+  FA87  CD04F9        			CALL	MLDAT      ;データ受信
+                      	; FDコマンド実行後アプリ動作が固まってしまう機械、アプリへの対処
+  FA8A  3E00          			LD		A,00H
+  FA8C  110000        			LD		DE,0000H
+  FA8F  CD3300        			CALL	TIMST
+                      			
+  FA92  2A0611        			LD		HL,(EXEAD)
+  FA95  E9            			JP		(HL)
+                      	
+  FA96  3E81          	KZCHK3:	LD		A,81H  ;LOADコマンド81H
+  FA98  CDB8F5        			CALL	STCMD
+  FA9B  C392F0        			JP		SDLOAD2
+                      	
+                      	
+                      	;************** プログラム中からファイル名を指定してLOAD ***************
+                      	;							DE <- ファイルネームアドレス
+  FA9E  F3            	MLHED2:	DI
+  FA9F  D5            			PUSH	DE
+  FAA0  C5            			PUSH	BC
+  FAA1  E5            			PUSH	HL
+  FAA2  CD82F0        			CALL	INIT
+  FAA5  D5            			PUSH	DE
+  FAA6  AF            			XOR		A
+  FAA7  110000        			LD		DE,0000H
+  FAAA  CD3300        			CALL	TIMST
+  FAAD  D1            			POP		DE
+  FAAE  C35BF8        			JP		MLH7
+                      	
+  FAB1  CD82F0        	START2:	CALL	INIT
+  FAB4  C316F0        			JP		START
+                      	
+  FAB7                			END
 
