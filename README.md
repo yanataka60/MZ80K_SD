@@ -41,6 +41,9 @@ https://github.com/yanataka60/MZ-700_SD
 
 ### 多段ロードの詳細については後述「BARYON対応」「多段ロード対応」を参照してください。
 
+BARYON対応:https://github.com/yanataka60/MZ80K_SD#baryon%E5%AF%BE%E5%BF%9C2026813
+
+多段ロード対応:https://github.com/yanataka60/MZ80K_SD#%E5%A4%9A%E6%AE%B5%E3%83%AD%E3%83%BC%E3%83%89%E5%AF%BE%E5%BF%9C2026813
 
 ## 回路図
 　KiCadフォルダ内のMZ80K_SD.pdf参照
