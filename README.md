@@ -82,8 +82,6 @@ J5に取り付けます。
 
 MicroSD Card Adapterについているピンヘッダを除去してハンダ付けするのが一番確実ですが、J5の穴にMicroSD Card Adapterをぴったりと押しつけ、裏から多めにハンダを流し込むことでハンダ付けをする方法もあります。なお、この方法の時にはしっかりハンダ付けが出来たかテスターで導通を確認しておいた方が安心です。
 
-![MicroSD Card Adapter](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter.jpg)
-
 ハンダ付けに自信のない方はJ2の秋月電子通商　AE-microSD-LLCNVをお使いください。AE-microSD-LLCNVならパワーLED、アクセスLEDが付いています。
 
 ![MicroSD Card Adapter1](https://github.com/yanataka60/MZ80K_SD/blob/main/JPEG/MicroSD%20Card%20Adapter(1).JPG)
